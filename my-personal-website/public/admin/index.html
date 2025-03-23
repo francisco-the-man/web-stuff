@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Project Manager - Content Management System</title>
-  <script defer src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <style>
     /* Custom styles for better CMS experience */
     :root {
@@ -91,12 +91,6 @@
   <!-- Include the script that builds the page and powers Netlify CMS -->
   <script src="https://unpkg.com/netlify-cms@^2.0.0/dist/netlify-cms.js"></script>
   <script>
-    // If running on GitHub Pages, we need a custom configuration
-    if (window.location.hostname.includes('github.io')) {
-      // Manually initialize the CMS
-      window.CMS_MANUAL_INIT = true;
-    }
-
     // Register a custom preview template for projects
     CMS.registerPreviewTemplate('projects', ({ entry }) => {
       const data = entry.get('data').toJS();
@@ -201,19 +195,13 @@
       }, 1000);
     });
 
-    // Initialize Netlify CMS manually if needed
-    if (window.CMS_MANUAL_INIT) {
-      window.CMS.init({
-        config: {
-          backend: {
-            name: 'github',
-            repo: 'francisco-the-man/web-stuff',
-            branch: 'main',
-            base_url: 'https://api.netlify.com',
-            auth_endpoint: 'auth',
-            api_root: 'https://api.github.com',
-            auth_type: 'implicit' // Required for implicit grant
-          }
+    // Handle Netlify Identity for better authentication flow
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.on("init", user => {
+        if (!user) {
+          window.netlifyIdentity.on("login", () => {
+            document.location.href = "/admin/";
+          });
         }
       });
     }

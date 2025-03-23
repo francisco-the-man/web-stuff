@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "postbuild": "cp -r public/admin dist/ && cp public/_redirects dist/",
     "lint": "eslint .",
     "preview": "vite preview"
   },

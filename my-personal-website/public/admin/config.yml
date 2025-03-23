@@ -11,10 +11,10 @@ backend:
     uploadMedia: 'Upload image "{{path}}"'
     deleteMedia: 'Delete image "{{path}}"'
 
-# when using a custom domain, remove this line
-site_url: https://francisco-the-man.github.io/web-stuff/
-display_url: https://francisco-the-man.github.io/web-stuff/
-logo_url: https://francisco-the-man.github.io/web-stuff/PIRATE-LOGO.png
+# Updated URLs for custom domain
+site_url: https://francisco-the-man.com
+display_url: https://francisco-the-man.com
+logo_url: https://francisco-the-man.com/PIRATE-LOGO.png
 
 # Enable editorial workflow for content review before publishing
 publish_mode: editorial_workflow
