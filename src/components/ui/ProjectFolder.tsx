@@ -104,7 +104,7 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
       }
       */
       
-      // For now, just use the URL directly
+      // or use the URL directly
       return url;
     }
     
@@ -127,35 +127,40 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
       }
     } catch (error) {
       console.error('Error loading folder SVG:', error);
-      return ''; // Return empty string as fallback
+      return '';
     }
   };
 
-  // Style for positioning the fileName in the tab
+  // positioning the fileName in the tab - adjusted for mobile
   const getFileNameStyle = (): CSSProperties => {
+    const baseStyle: CSSProperties = {
+      position: 'absolute',
+      top: '2%', 
+      zIndex: 10,
+      fontSize: 'clamp(0.75rem, 2vw, 1rem)', 
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      maxWidth: '40%'
+    };
+    
     if (position === 'left') {
       return {
-        position: 'absolute',
-        top: '2%', // Percentage based for better scaling
+        ...baseStyle,
         left: '18%',
         transform: 'translateX(-50%)',
-        zIndex: 10
       };
     } else if (position === 'middle') {
       return {
-        position: 'absolute',
-        top: '2%', // Percentage based for better scaling
+        ...baseStyle,
         left: '38%',
         transform: 'translateX(0%)',
-        zIndex: 10
       };
     } else { // right position
       return {
-        position: 'absolute',
-        top: '2%', // Percentage based for better scaling
+        ...baseStyle,
         right: '18%',
         transform: 'translateX(50%)',
-        zIndex: 10
       };
     }
   };
@@ -170,7 +175,7 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
   const processedImageUrl = getImageUrl(projectImg);
 
   return (
-    <div className={`absolute top-[20%] w-full max-w-xl mx-auto ${className}`}>
+    <div className={`absolute top-[30%] w-full max-w-xl mx-auto ${className}`}>
       {/* Folder graphic with content positioned on top */}
       <div className="relative">
         {/* SVG Folder */}
@@ -181,18 +186,17 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
         {/* File name in tab */}
         <div 
           style={getFileNameStyle()}
-          className="text-base px-12"
+          className="text-base px-3 md:px-12"
         >
           {fileName}
         </div>
         
-        {/* Content inside folder */}
-        <div className="absolute top-[15%] left-0 right-0 bottom-[15%] flex flex-col items-center px-12">
+        <div className="absolute top-[15%] left-0 right-0 bottom-[15%] flex flex-col items-center px-4 md:px-12">
           {/* Project title */}
-          <h3 className="text-2xl font-bold uppercase mb-4 text-center">{projectTitle}</h3>
+          <h3 className="text-lg md:text-2xl font-bold uppercase mb-2 md:mb-0 text-center truncate max-w-full md:max-w-none md:whitespace-normal">{projectTitle}</h3>
           
-          {/* Project image with improved fallback */}
-          <div className="w-4/5 mb-4">
+          
+          <div className="w-4/5 md:mb-4">
             {imageError || !processedImageUrl ? (
               <ImagePlaceholder 
                 title={imageError ? "Image failed to load" : "No image available"} 
@@ -202,15 +206,16 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
               <img 
                 src={processedImageUrl} 
                 alt={projectTitle} 
-                className="w-full h-36 object-cover border border-gray-200"
+                className="w-full max-h-24 md:max-h-36 object-contain"
                 onError={handleImageError}
-                loading="lazy" // Add lazy loading for better performance
+                loading="lazy"
               />
             )}
           </div>
           
-          {/* Description - using a specific height and line-clamp-4 */}
-          <p className="text-sm mb-3 text-center line-clamp-4" style={{ minHeight: '4.8rem' }}>
+          {/* Description - visible on all screen sizes with adjusted clamp for desktop */}
+          <p className="text-sm mb-3 text-center line-clamp-3 md:line-clamp-none md:overflow-visible" 
+             style={{ minHeight: '3rem' }}>
             {description}
           </p>
           
@@ -222,7 +227,7 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
               </p>
             ) : (
               <div className="flex items-center justify-center">
-                <span className="mr-2 text-gray-700">
+                <span className="mr-2 text-gray-700 transform scale-75 md:scale-100">
                   <GitHubLogo />
                 </span>
                 <EncircleButton 
