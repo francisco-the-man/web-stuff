@@ -33,9 +33,9 @@ collections:
     format: "json"
     extension: "json"
     delete: true
-    slug: "{{fileName}}"
-    identifier_field: fileName
-    summary: "{{fileName}} - {{projectTitle}} ({{type}})"
+    slug: "{{fields.fileName}}"
+    identifier_field: "fileName"
+    summary: "{{fields.fileName}} - {{fields.projectTitle}} ({{fields.type}})"
     sortable_fields: ['fileName', 'projectTitle', 'type', 'category']
     view_filters:
       - label: "Computer Projects"
