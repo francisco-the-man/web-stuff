@@ -1,0 +1,24 @@
+backend:
+  name: git-gateway
+  branch: main # Branch to update (optional; defaults to master)
+
+media_folder: "public/projects/images" # Media files will be stored in the repo under public/projects/images
+public_folder: "/projects/images" # The src attribute for uploaded media will begin with /projects/images
+
+collections:
+  - name: "projects" # Used in routes, e.g., /admin/collections/projects
+    label: "Project" # Used in the UI
+    folder: "src/_projects" # The path to the folder where the documents are stored
+    create: true # Allow users to create new documents in this collection
+    slug: "{{slug}}" # Filename template, e.g., project-name.md
+    fields: # The fields for each document
+      - {label: "ID", name: "id", widget: "number", valueType: "int"}
+      - {label: "File Name", name: "fileName", widget: "string"}
+      - {label: "Project Title", name: "projectTitle", widget: "string"}
+      - {label: "Description", name: "description", widget: "text"}
+      - {label: "Project Image", name: "projectImg", widget: "image"}
+      - {label: "Type", name: "type", widget: "select", options: ["computational", "written"]}
+      - {label: "Category", name: "category", widget: "select", options: ["computer", "research", "both"]}
+      - {label: "Position", name: "position", widget: "select", options: ["left", "middle", "right"]}
+      - {label: "Author Names", name: "authorNames", widget: "string", required: false}
+      - {label: "Repository Link", name: "repoLink", widget: "string", required: false} 

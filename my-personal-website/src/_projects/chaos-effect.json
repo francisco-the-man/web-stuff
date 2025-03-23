@@ -1,0 +1,11 @@
+{
+  "id": 2,
+  "fileName": "DDPMs",
+  "projectTitle": "Chaos Effect",
+  "description": "An interactive physics-based animation that brings chaos to order and back again, exploring the concepts of entropy and organization.",
+  "projectImg": "/projects/images/chaos-effect.jpg",
+  "type": "computational",
+  "category": "computer",
+  "position": "middle",
+  "repoLink": "https://github.com/francisco-the-man/chaos-effect"
+} 

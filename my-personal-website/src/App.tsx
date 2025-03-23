@@ -1,0 +1,45 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Home from './components/Home';
+import Contact from './components/Contact';
+import Computer from './components/Computer';
+import Projects from './components/Projects';
+import Research from './components/Research';
+import ProjectAdmin from './components/ProjectAdmin';
+import Footer from './components/Footer';
+import { ChaosProvider } from './context/ChaosContext';
+import { ProjectProvider } from './context/ProjectContext';
+import ChaosEffect from './components/ChaosEffect';
+
+function App() {
+  return (
+    <Router>
+      <ChaosProvider>
+        <ProjectProvider>
+          <div className="flex flex-col min-h-screen bg-white text-black font-ibm-plex-mono">
+            <Navbar />
+            <div 
+              id="main-content" 
+              className="flex-grow relative"
+            >
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/computer" element={<Computer />} />
+                <Route path="/computer/projects" element={<Projects />} />
+                <Route path="/research" element={<Research />} />
+                <Route path="/research/projects" element={<Research />} />
+                <Route path="/computer/projects/admin" element={<ProjectAdmin />} />
+                <Route path="/creative" element={<div className="py-12 px-4 text-center">Creative page coming soon</div>} />
+              </Routes>
+            </div>
+            <Footer />
+            <ChaosEffect containerId="main-content" />
+          </div>
+        </ProjectProvider>
+      </ChaosProvider>
+    </Router>
+  );
+}
+
+export default App;
