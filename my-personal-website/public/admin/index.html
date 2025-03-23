@@ -25,21 +25,6 @@
       margin: 0 auto !important;
     }
     
-    /* Deploy Test Banner - ADDED MAY 21st */
-    .deploy-test-banner {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: #4CAF50;
-      color: white;
-      text-align: center;
-      padding: 10px;
-      z-index: 10000;
-      font-weight: bold;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-    
     /* Improved image preview size */
     .nc-imageControl-imageWrapper {
       max-height: 300px;
@@ -98,139 +83,141 @@
       border-radius: 4px;
       margin-bottom: 20px;
     }
+
+    /* Info box for path info */
+    .info-box {
+      margin: 10px 20px;
+      padding: 10px;
+      background: #E8F5E9;
+      border-radius: 4px;
+    }
   </style>
   <!-- Import IBM Plex Mono font -->
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- DEPLOY TEST BANNER - MAY 21, 2024 -->
-  <div class="deploy-test-banner">🚀 DEPLOY TEST: MAY 21, 2024 - This banner confirms you're viewing the latest version</div>
-  
   <!-- Include the script that builds the page and powers Netlify CMS -->
   <script src="https://unpkg.com/netlify-cms@^2.10.192/dist/netlify-cms.js"></script>
   
   <!-- Initialize the CMS -->
   <script>
-    // Log versions and configuration for debugging
-    console.log('Netlify CMS Admin - May 21, 2024 Version');
-    console.log('Browser:', navigator.userAgent);
-    
     // Global error handling for CMS
     window.onerror = function(message, source, lineno, colno, error) {
       console.error('CMS Error:', message, error);
-      alert('CMS Error: ' + message);
       return true;
     };
 
-    // Direct override of the problematic Immutable.js methods
-    (function patchImmutableJS() {
-      console.log('Initializing admin with Immutable.js patches');
+    // Global fix for Immutable.js errors
+    (function() {
+      // Keep track of patched objects
+      const patchedObjects = new WeakMap();
       
-      // Create a safer getIn implementation
-      function safeGetIn(obj, path, defaultValue) {
-        try {
-          if (!obj) return defaultValue;
-          
-          // Convert path to array if it's not already
-          const keys = Array.isArray(path) ? path : path.split('.');
-          let current = obj;
-          
-          for (const key of keys) {
-            if (current === undefined || current === null) {
+      // Monkey patch all methods that might use getIn
+      const monkeyPatchMethods = function(obj) {
+        if (!obj || typeof obj !== 'object' || patchedObjects.has(obj)) {
+          return obj;
+        }
+        
+        // Mark as patched to avoid recursion
+        patchedObjects.set(obj, true);
+        
+        // Add safe getIn method if missing
+        if (typeof obj.getIn !== 'function') {
+          obj.getIn = function(path, defaultValue) {
+            try {
+              let current = this;
+              
+              // Handle empty or invalid paths
+              if (!path || !Array.isArray(path)) {
+                return defaultValue;
+              }
+              
+              // Traverse the path
+              for (const key of path) {
+                if (current === undefined || current === null) {
+                  return defaultValue;
+                }
+                
+                // Try using get if available, otherwise direct access
+                current = typeof current.get === 'function' ? 
+                          current.get(key) : current[key];
+              }
+              
+              return current === undefined ? defaultValue : current;
+            } catch (e) {
+              console.warn('Error in getIn:', e);
               return defaultValue;
             }
-            
-            // Handle both object properties and Map/Record methods
-            if (typeof current.get === 'function') {
-              current = current.get(key);
-            } else {
-              current = current[key];
-            }
-          }
-          
-          return current === undefined ? defaultValue : current;
-        } catch (e) {
-          console.error('SafeGetIn Error:', e);
-          return defaultValue;
-        }
-      }
-      
-      // Enhanced safe wrapper for Immutable objects
-      window.fixImmutableIssue = function(entry) {
-        // If entry is null or undefined, return a safe object
-        if (!entry) {
-          console.warn('Entry is null or undefined');
-          return {
-            getIn: (path, defaultValue) => defaultValue,
-            toJS: () => ({}),
-            data: {}
           };
         }
         
-        // If entry already has getIn method, wrap it with our safe version
-        if (typeof entry.getIn === 'function') {
-          const originalGetIn = entry.getIn;
-          entry.getIn = function(path, defaultValue) {
-            try {
-              return originalGetIn.call(entry, path, defaultValue);
-            } catch (error) {
-              console.warn('Error in original getIn, using safe fallback', error);
-              return safeGetIn(entry.toJS ? entry.toJS() : entry, path, defaultValue);
-            }
+        // Add toJS method if missing
+        if (typeof obj.toJS !== 'function') {
+          obj.toJS = function() {
+            // Simple conversion to plain object
+            return Object.assign({}, this);
           };
-          return entry;
         }
         
-        // If entry doesn't have getIn, create a wrapper object
-        console.warn('Entry missing getIn method, creating wrapper');
-        return {
-          original: entry,
-          getIn: function(path, defaultValue) {
-            return safeGetIn(entry, path, defaultValue);
-          },
-          toJS: function() {
-            return entry && typeof entry.toJS === 'function' ? entry.toJS() : 
-                  (typeof entry === 'object' ? entry : {});
-          },
-          data: entry.data || {}
-        };
+        return obj;
       };
       
-      // Override slug handling - this is critical
-      window.createSlug = function(collection, entry) {
-        try {
-          console.log('Creating slug for entry', entry);
-          
-          // Explicitly extract fileName from entry data
-          let fileName = '';
-          
-          // Try multiple ways to get the fileName
-          try {
-            if (entry && entry.getIn) {
-              fileName = entry.getIn(['data', 'fileName'], '');
-            } else if (entry && entry.data) {
-              fileName = entry.data.fileName || '';
-            } else if (entry && entry.toJS) {
-              const data = entry.toJS();
-              fileName = data.data ? data.data.fileName : '';
+      // Create a more robust error handler for the CMS
+      const originalConsoleError = console.error;
+      console.error = function(...args) {
+        const errorMsg = args.join(' ');
+        
+        // Check for specific error message
+        if (errorMsg.includes('getIn is not a function')) {
+          // Try to recover by finding the 't' object in the arguments
+          for (let i = 0; i < args.length; i++) {
+            if (args[i] && typeof args[i] === 'object') {
+              monkeyPatchMethods(args[i]);
             }
-          } catch (err) {
-            console.error('Error accessing entry data', err);
           }
-          
-          // Log and return the slug
-          console.log('Generated slug from fileName:', fileName);
-          
-          if (!fileName || fileName.trim() === '') {
-            console.warn('No fileName found, using timestamp');
-            return 'project-' + new Date().getTime().toString();
-          }
-          
-          return String(fileName).trim();
-        } catch (error) {
-          console.error('Slug creation error:', error);
-          return 'error-slug-' + new Date().getTime().toString();
         }
+        
+        // Call original console.error
+        originalConsoleError.apply(console, args);
+      };
+      
+      // Global error catcher specifically for getIn errors
+      window.addEventListener('unhandledrejection', function(event) {
+        if (event.reason && event.reason.message && 
+            event.reason.message.includes('getIn is not a function')) {
+          console.warn('Caught unhandled rejection with getIn error, patching object');
+          
+          // Stop propagation and prevent default
+          event.stopImmediatePropagation();
+          event.preventDefault();
+          
+          // Try to recover
+          setTimeout(function() {
+            const buttons = document.querySelectorAll('button');
+            const saveButton = Array.from(buttons).find(b => 
+              b.textContent.toLowerCase().includes('save') || 
+              b.textContent.toLowerCase().includes('publish')
+            );
+            
+            if (saveButton) {
+              console.log('Attempting to retry save operation...');
+              saveButton.click();
+            }
+          }, 500);
+          
+          return false;
+        }
+      });
+      
+      // Global method to fix Immutable objects
+      window.fixImmutableIssue = function(entry) {
+        if (!entry) return { 
+          getIn: () => undefined, 
+          toJS: () => ({}), 
+          data: {} 
+        };
+        
+        return monkeyPatchMethods(entry);
       };
     })();
 
@@ -253,7 +240,6 @@
         try {
           data = entry.getIn(['data'], {});
           data = typeof data.toJS === 'function' ? data.toJS() : data;
-          console.log('Preview data:', data);
         } catch (error) {
           console.error('Error getting entry data:', error);
           data = {};
@@ -343,60 +329,70 @@
         }
       });
 
-      // Add Netlify CMS hooks for validation and slug customization 
-      window.CMS.registerEventListener({
+      // Register event listeners for validation and data handling
+      CMS.registerEventListener({
         name: 'preSave',
         handler: ({ entry }) => {
-          console.log('Handling preSave event', entry);
-          
-          // Apply our Immutable fix
-          entry = window.fixImmutableIssue(entry);
-          
           try {
-            // Get and log entry data safely
-            const data = entry.getIn(['data'], {});
-            const jsData = typeof data.toJS === 'function' ? data.toJS() : data;
-            console.log('Saving entry data:', jsData);
+            // Apply our Immutable fix
+            entry = window.fixImmutableIssue(entry);
+            
+            // Get and validate entry data
+            let data;
+            try {
+              data = entry.getIn(['data'], {});
+              data = typeof data.toJS === 'function' ? data.toJS() : data;
+            } catch (error) {
+              console.error('Error getting entry data in preSave:', error);
+              return 'Error processing form data. Please try again.';
+            }
             
             // Validate required fields
-            if (!jsData.fileName) {
+            if (!data.fileName) {
               return 'File Name is required. Please provide a tab name.';
             }
             
-            if (jsData.type === 'written' && !jsData.authorNames) {
+            if (data.type === 'written' && !data.authorNames) {
               return 'Written projects require author names. Please add at least one author.';
             }
             
-            if (jsData.type === 'computational' && !jsData.repoLink) {
+            if (data.type === 'computational' && !data.repoLink) {
               return 'Computational projects require a repository link. Please add a valid repository URL.';
             }
             
             return true; // Allow the save to proceed
           } catch (error) {
-            console.error('Error handling preSave:', error);
-            return 'Error processing form data. Please try again.';
+            console.error('Error in preSave handler:', error);
+            return 'An unexpected error occurred. Please try again or check the console for details.';
           }
         },
+      });
+      
+      // Fix potential issues with entry loading
+      CMS.registerEventListener({
+        name: 'prePublish',
+        handler: ({ entry }) => {
+          // Patch the entry one more time right before publishing
+          window.fixImmutableIssue(entry);
+          return true;
+        }
       });
 
       // Add helpful information to the CMS interface
       document.addEventListener('DOMContentLoaded', function() {
-        // Insert a helpful note about the current configuration
         setTimeout(() => {
           try {
+            // Add info box about project paths
             const content = document.querySelector('.nc-app-main .nc-app-content');
             if (content) {
               const infoBox = document.createElement('div');
-              infoBox.style.margin = '10px 20px';
-              infoBox.style.padding = '10px';
-              infoBox.style.background = '#E8F5E9';
-              infoBox.style.borderRadius = '4px';
+              infoBox.className = 'info-box';
               infoBox.innerHTML = `
                 <h3 style="margin-top: 0;">Project Management Details</h3>
-                <p><strong>Projects are saved to:</strong> src/_projects/[filename].json</p>
+                <p><strong>Projects are saved to:</strong> src/_projects/[timestamp].json</p>
                 <p><strong>Images are saved to:</strong> public/projects/images/</p>
-                <p><strong>File Name field</strong> is used to generate both the JSON filename and the folder tab label.</p>
-                <p><strong>Deploy version:</strong> May 21, 2024 - Enhanced slug handling</p>
+                <p><strong>File Name field</strong> is used for the folder tab label.</p>
+                <p><strong>Note:</strong> We've switched to timestamp-based filenames for better compatibility.</p>
               `;
               
               // Insert at the beginning of the content
@@ -407,6 +403,7 @@
               }
             }
             
+            // Add debug info buttons
             const header = document.querySelector('.nc-appHeader-content');
             if (header) {
               const infoButton = document.createElement('button');
@@ -429,12 +426,66 @@
                 alert('Debug information has been output to the browser console.\nPress F12 to view.');
               });
               header.appendChild(debugButton);
+              
+              // Add patch status checker button
+              const checkButton = document.createElement('button');
+              checkButton.className = 'nc-button';
+              checkButton.innerHTML = 'Check Patches';
+              checkButton.style.marginLeft = '10px';
+              checkButton.style.background = '#2196F3';
+              checkButton.addEventListener('click', () => {
+                // Try to apply patches again
+                const cms = window.CMS;
+                if (cms && cms.getState) {
+                  const state = cms.getState();
+                  console.log('Current CMS state:', state);
+                  
+                  // Check for entries collection
+                  if (state.entries && state.entries.entities) {
+                    const entries = state.entries.entities;
+                    console.log('Found', Object.keys(entries).length, 'entries');
+                    
+                    // Try to apply our patches to all entries
+                    Object.values(entries).forEach(entry => {
+                      window.fixImmutableIssue(entry);
+                    });
+                    
+                    alert('Patches have been reapplied to ' + Object.keys(entries).length + ' entries.');
+                  } else {
+                    alert('No entries found in CMS state.');
+                  }
+                } else {
+                  alert('Unable to access CMS state.');
+                }
+              });
+              header.appendChild(checkButton);
             }
           } catch (e) {
             console.error('Error adding help elements:', e);
           }
         }, 1000);
       });
+      
+      // Attempt to patch any existing objects in the CMS at regular intervals
+      setInterval(function() {
+        try {
+          // Find all forms in the DOM
+          const forms = document.querySelectorAll('form');
+          forms.forEach(form => {
+            // Find all input elements
+            const inputs = form.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+              // Check if the input has an associated CMS widget
+              const widget = input.closest('[class*="widget-"]');
+              if (widget && widget.__cms_widget) {
+                window.fixImmutableIssue(widget.__cms_widget);
+              }
+            });
+          });
+        } catch (e) {
+          // Silently fail, this is just a precaution
+        }
+      }, 2000);
     } catch (error) {
       console.error('CMS initialization error:', error);
       alert('Failed to initialize CMS: ' + error.message);

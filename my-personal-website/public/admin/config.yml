@@ -33,9 +33,10 @@ collections:
     format: "json"
     extension: "json"
     delete: true
-    slug: "{{fields.fileName}}"
+    # Simplify to use the default slug generation
+    slug: "{{year}}-{{month}}-{{day}}-{{hour}}-{{minute}}-{{second}}"
     identifier_field: "fileName"
-    summary: "{{fields.fileName}} - {{fields.projectTitle}} ({{fields.type}})"
+    summary: "{{fileName}} - {{projectTitle}} ({{type}})"
     sortable_fields: ['fileName', 'projectTitle', 'type', 'category']
     view_filters:
       - label: "Computer Projects"
