@@ -1,0 +1,11 @@
+{
+  "id": 5,
+  "fileName": "BBuddy",
+  "projectTitle": "Background Buddy",
+  "description": "Developing an AI-powered tool to assist journal writers and researchers with automatically generating contextual information.",
+  "projectImg": "/projects/images/img-bb.png",
+  "type": "computational",
+  "category": "computer",
+  "position": "middle",
+  "repoLink": "https://github.com/akanshyabhat/backgroundbuddy"
+} 

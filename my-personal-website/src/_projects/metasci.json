@@ -1,0 +1,11 @@
+{
+  "id": 2,
+  "fileName": "Metasci",
+  "projectTitle": "Metascience",
+  "description": "Science is a social process. Exploring how scientific communities work and evolve over time.",
+  "projectImg": "/projects/images/img-petercook.png",
+  "type": "computational",
+  "category": "research",
+  "position": "right",
+  "repoLink": "https://github.com/francisco-the-man/metascience"
+} 

@@ -1,0 +1,11 @@
+{
+  "id": 1,
+  "fileName": "Genius",
+  "projectTitle": "Philosophy Studies",
+  "description": "A meandering adventure through Plato's Phaedrus, Kant's critiques, Luhmann's systems of knowledge, and Einstein's theory of relativity.",
+  "projectImg": "/projects/images/img-kant.png",
+  "type": "written",
+  "category": "research",
+  "position": "middle",
+  "repoLink": ""
+} 
