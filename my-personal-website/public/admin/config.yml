@@ -1,7 +1,7 @@
 backend:
   name: github
-  repo: francisco-the-man/web-stuff # Your GitHub repo
-  branch: main # Branch to update
+  repo: francisco-the-man/web-stuff
+  branch: main
   base_url: https://api.netlify.com
   auth_endpoint: auth
   commit_messages:
@@ -19,25 +19,28 @@ logo_url: https://francisco-the-man.github.io/web-stuff/PIRATE-LOGO.png
 # Optional: enables a staging workflow
 publish_mode: editorial_workflow
 
-media_folder: "my-personal-website/public/projects/images" # Media files will be stored in the repo
-public_folder: "/projects/images" # The src attribute for uploaded media
+media_folder: "public/projects/images"
+public_folder: "/projects/images"
 
 collections:
-  - name: "projects" # Used in routes, e.g., /admin/collections/projects
-    label: "Project" # Used in the UI
-    folder: "my-personal-website/src/_projects" # The path to the folder where the documents are stored
-    create: true # Allow users to create new documents in this collection
-    slug: "{{slug}}" # Filename template, e.g., project-name.md
-    extension: "json"
+  - name: "projects"
+    label: "Projects"
+    folder: "src/_projects"
+    create: true
     format: "json"
-    fields: # The fields for each document
-      - {label: "ID", name: "id", widget: "number", valueType: "int"}
-      - {label: "File Name", name: "fileName", widget: "string"}
-      - {label: "Project Title", name: "projectTitle", widget: "string"}
-      - {label: "Description", name: "description", widget: "text"}
-      - {label: "Project Image", name: "projectImg", widget: "image"}
-      - {label: "Type", name: "type", widget: "select", options: ["computational", "written"]}
-      - {label: "Category", name: "category", widget: "select", options: ["computer", "research", "both"]}
-      - {label: "Position", name: "position", widget: "select", options: ["left", "middle", "right"]}
-      - {label: "Author Names", name: "authorNames", widget: "string", required: false}
+    extension: "json"
+    delete: true
+    slug: "{{fileName}}"
+    identifier_field: fileName
+    summary: "{{fileName}} - {{projectTitle}}"
+    commit_message: "Update project: {{slug}}"
+    fields:
+      - {label: "ID", name: "id", widget: "number", required: true}
+      - {label: "File Name", name: "fileName", widget: "string", required: true}
+      - {label: "Project Title", name: "projectTitle", widget: "string", required: true}
+      - {label: "Description", name: "description", widget: "text", required: true}
+      - {label: "Project Image", name: "projectImg", widget: "image", required: true}
+      - {label: "Type", name: "type", widget: "select", options: ["computational", "written"], required: true}
+      - {label: "Category", name: "category", widget: "select", options: ["research", "computer", "both"], required: true}
+      - {label: "Position", name: "position", widget: "select", options: ["left", "middle", "right"], required: true}
       - {label: "Repository Link", name: "repoLink", widget: "string", required: false} 
