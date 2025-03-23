@@ -1,94 +1,66 @@
 import { ProjectData } from '../context/ProjectContext';
+import { fetchProjectsFromNotion } from './notionService';
 
-// This function loads projects from the JSON files in the _projects directory
-// and assigns IDs automatically if they don't exist
+// This function loads projects from Notion and falls back to default projects if needed
 export const loadProjects = async (): Promise<ProjectData[]> => {
   // Add timestamp to avoid caching issues during development
   const timestamp = Date.now();
   console.log(`Loading projects at timestamp: ${timestamp}`);
   
   try {
-    const projectModules = import.meta.glob('../_projects/*.json', { eager: true });
+    // First attempt to fetch projects from Notion
+    console.log('Attempting to fetch projects from Notion...');
+    const notionProjects = await fetchProjectsFromNotion();
     
-    // Log the found project files to help with debugging
-    console.log('Found project files:', Object.keys(projectModules));
-    
-    if (Object.keys(projectModules).length === 0) {
-      console.warn('No project files found. Using default projects.');
-      return getDefaultProjects();
-    }
-    
-    // Convert the modules object to an array of project data
-    let projects: ProjectData[] = Object.values(projectModules).map(
-      (module: any, index: number) => {
-        try {
-          const projectData = module.default || module;
-          
-          // Validate required fields (except ID which we'll handle automatically)
-          if (!projectData.fileName || !projectData.projectTitle) {
-            console.warn('Invalid project data (missing required fields):', projectData);
-            return null;
-          }
-          
-          // Add a fallback image if the image doesn't exist
-          if (!projectData.projectImg || projectData.projectImg === "") {
-            projectData.projectImg = "/vite.svg"; // Use a known image that exists
-          }
-          
-          // Ensure image path starts with / 
-          if (projectData.projectImg && !projectData.projectImg.startsWith('/')) {
-            projectData.projectImg = '/' + projectData.projectImg;
-          }
-          
-          // Ensure project type has matching required fields
-          if (projectData.type === 'written' && !projectData.authorNames) {
-            console.warn(`Project "${projectData.fileName}" is missing authorNames which is required for "written" type`);
-            // Add empty authorNames to prevent errors
-            projectData.authorNames = '';
-          }
-          
-          if (projectData.type === 'computational' && !projectData.repoLink) {
-            console.warn(`Project "${projectData.fileName}" is missing repoLink which is required for "computational" type`);
-            // Add placeholder repoLink to prevent errors
-            projectData.repoLink = '#';
-          }
-          
-          // Return the project data with all fields validated
-          return projectData;
-        } catch (error) {
-          console.error('Error processing project module:', error);
-          return null;
+    if (notionProjects && notionProjects.length > 0) {
+      console.log(`Successfully loaded ${notionProjects.length} projects from Notion`);
+      
+      // Ensure all projects have the required fields
+      const validatedProjects = notionProjects.map((project, index) => {
+        // Add a fallback image if the image doesn't exist
+        if (!project.projectImg || project.projectImg === "") {
+          project.projectImg = "/vite.svg"; // Use a known image that exists
         }
-      }
-    ).filter(Boolean) as ProjectData[];
-    
-    // If no valid projects were found after processing, use defaults
-    if (projects.length === 0) {
-      console.warn('No valid projects found after processing. Using default projects.');
-      return getDefaultProjects();
+        
+        // Ensure image path starts with / 
+        if (project.projectImg && !project.projectImg.startsWith('/')) {
+          project.projectImg = '/' + project.projectImg;
+        }
+        
+        // Ensure project type has matching required fields
+        if (project.type === 'written' && !project.authorNames) {
+          console.warn(`Project "${project.fileName}" is missing authorNames which is required for "written" type`);
+          // Add empty authorNames to prevent errors
+          project.authorNames = '';
+        }
+        
+        if (project.type === 'computational' && !project.repoLink) {
+          console.warn(`Project "${project.fileName}" is missing repoLink which is required for "computational" type`);
+          // Add placeholder repoLink to prevent errors
+          project.repoLink = '#';
+        }
+        
+        return {
+          ...project,
+          // Ensure ID is set correctly
+          id: project.id !== undefined ? project.id : index
+        };
+      });
+      
+      // Sort projects by ID to ensure consistent display order
+      return validatedProjects.sort((a, b) => a.id - b.id);
     }
     
-    // Sort projects alphabetically by fileName first 
-    // This ensures a consistent initial order before ID assignment
-    projects.sort((a, b) => a.fileName.localeCompare(b.fileName));
-    
-    // Automatically assign IDs to projects based on their position in the array
-    // This ensures we don't have duplicate IDs and maintains order
-    projects = projects.map((project, index) => ({
-      ...project,
-      // Use existing ID if available, otherwise assign based on index
-      id: project.id !== undefined ? project.id : index
-    }));
-    
-    // Final sort by ID to ensure consistent display order
-    return projects.sort((a, b) => a.id - b.id);
+    // If Notion fetch fails or returns empty, fall back to default projects
+    console.warn('No valid projects found from Notion. Using default projects.');
+    return getDefaultProjects();
   } catch (error) {
-    console.error('Error loading projects:', error);
+    console.error('Error loading projects from Notion:', error);
     return getDefaultProjects();
   }
 };
 
-// Default projects to use in development or if no CMS projects are found
+// Default projects to use in development or if no Notion projects are found
 export const getDefaultProjects = (): ProjectData[] => {
   return [
     {

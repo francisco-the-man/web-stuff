@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { loadProjects, getDefaultProjects } from '../utils/projectLoader';
 import { syncProjectsWithCMS, LOCAL_STORAGE_KEY, reindexProjectIds } from '../utils/projectSync';
+import { testNotionConnection } from '../utils/notionService';
 
 // Types from ProjectFolder component
 export type ProjectType = 'written' | 'computational';
@@ -45,21 +46,45 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Create a reusable refresh function
   const refreshProjects = useCallback(async () => {
-    console.log("Refreshing projects from CMS...");
+    console.log("Refreshing projects from Notion...");
     setIsLoading(true);
+    
     try {
-      // Use the sync utility to merge local and CMS projects
-      const syncedProjects = await syncProjectsWithCMS();
+      // Test Notion connection first
+      const isNotionConnected = await testNotionConnection();
       
-      if (syncedProjects && syncedProjects.length > 0) {
-        console.log("Successfully synced projects:", syncedProjects);
-        setProjects(syncedProjects);
+      if (isNotionConnected) {
+        console.log("Notion connection successful, loading projects...");
+        // Use the project loader to fetch data from Notion
+        const notionProjects = await loadProjects();
+        
+        if (notionProjects && notionProjects.length > 0) {
+          console.log("Successfully loaded projects from Notion:", notionProjects);
+          setProjects(notionProjects);
+          // Update local storage with Notion data
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(notionProjects));
+        } else {
+          console.log("No projects found in Notion, using defaults");
+          setProjects(initialProjects);
+        }
       } else {
-        console.log("No synced projects found, using defaults");
-        setProjects(initialProjects);
+        console.warn("Notion connection failed, trying to load from localStorage");
+        // Try to use localStorage as fallback
+        const savedProjects = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (savedProjects) {
+          try {
+            setProjects(JSON.parse(savedProjects));
+          } catch (error) {
+            console.error('Failed to parse saved projects:', error);
+            setProjects(initialProjects);
+          }
+        } else {
+          console.log("No localStorage backup, using defaults");
+          setProjects(initialProjects);
+        }
       }
     } catch (error) {
-      console.error('Failed to sync projects:', error);
+      console.error('Failed to refresh projects:', error);
       // If loading fails, try to use localStorage as fallback
       const savedProjects = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedProjects) {
@@ -99,11 +124,11 @@ export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children })
   useEffect(() => {
     refreshProjects();
     
-    // Set up a refresh interval (every 30 seconds during development)
+    // Set up a refresh interval in development
     if (import.meta.env.DEV) {
       const intervalId = setInterval(() => {
         refreshProjects();
-      }, 30000); // Increased to 30 seconds to reduce frequency
+      }, 60000); // Refresh every minute during development
       
       return () => clearInterval(intervalId);
     }
