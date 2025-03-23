@@ -3,29 +3,205 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Content Manager</title>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <title>Project Manager - Content Management System</title>
+  <script defer src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <style>
+    /* Custom styles for better CMS experience */
+    :root {
+      --primary-color: #3F51B5;
+      --secondary-color: #3982F7;
+      --success-color: #4CAF50;
+      --warning-color: #FF9800;
+      --error-color: #F44336;
+    }
+    
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    
+    /* Make the CMS interface wider */
+    .nc-app-main {
+      max-width: 1400px !important;
+      margin: 0 auto !important;
+    }
+    
+    /* Improve image preview size */
+    .nc-imageControl-imageWrapper {
+      max-height: 300px;
+      overflow: hidden;
+    }
+    
+    /* Style the header */
+    .nc-appHeader-main {
+      background: var(--primary-color) !important;
+    }
+    
+    /* Custom button styles */
+    .nc-button.nc-button-primary {
+      background-color: var(--primary-color) !important;
+    }
+    
+    /* Preview styles */
+    .project-preview-container {
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      background: #fff;
+    }
+    
+    .project-preview-header {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .project-preview-image {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    
+    .project-preview-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .project-preview-meta div {
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 4px;
+    }
+    
+    .project-preview-description {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+  </style>
+  <!-- Import IBM Plex Mono font -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <!-- Include the script that builds the page and powers Netlify CMS -->
   <script src="https://unpkg.com/netlify-cms@^2.0.0/dist/netlify-cms.js"></script>
   <script>
-    // GitHub Pages deployment support
+    // If running on GitHub Pages, we need a custom configuration
     if (window.location.hostname.includes('github.io')) {
-      // Use a custom backend config for GitHub Pages
+      // Manually initialize the CMS
       window.CMS_MANUAL_INIT = true;
-      window.netlifyIdentity = {
-        on: (event, callback) => {
-          if (event === 'init') {
-            callback(null);
-          }
-        },
-        open: () => {
-          window.open('https://app.netlify.com/sites/YOUR_NETLIFY_SITE_NAME/identity', '_blank');
-        }
-      };
     }
-    // Initialize Netlify CMS manually
+
+    // Register a custom preview template for projects
+    CMS.registerPreviewTemplate('projects', ({ entry }) => {
+      const data = entry.get('data').toJS();
+      try {
+        // Validate required fields based on type
+        if (data.type === 'written' && !data.authorNames) {
+          return `
+            <div style="color: #F44336; padding: 20px; text-align: center; background: #FFEBEE; border-radius: 4px;">
+              <h3>Missing Required Field</h3>
+              <p>Written projects require author names. Please add at least one author.</p>
+            </div>
+          `;
+        }
+        if (data.type === 'computational' && !data.repoLink) {
+          return `
+            <div style="color: #F44336; padding: 20px; text-align: center; background: #FFEBEE; border-radius: 4px;">
+              <h3>Missing Required Field</h3>
+              <p>Computational projects require a repository link. Please add a valid repository URL.</p>
+            </div>
+          `;
+        }
+        
+        // Preview the project data with improved styling
+        return `
+          <div class="project-preview-container">
+            <div class="project-preview-header">
+              <h1 style="margin-top: 0; color: #333;">${data.projectTitle || 'Untitled Project'}</h1>
+              <p style="color: #666; margin-bottom: 0;">
+                <strong>Tab Label:</strong> ${data.fileName || 'Unnamed Tab'}
+              </p>
+            </div>
+            
+            ${data.projectImg ? 
+              `<img src="${data.projectImg}" alt="${data.projectTitle}" class="project-preview-image" />` : 
+              '<div style="padding: 30px; background: #f0f0f0; text-align: center; border-radius: 4px;">No image selected</div>'
+            }
+            
+            <div class="project-preview-meta">
+              <div>
+                <strong>Type:</strong> ${data.type || 'Not specified'}<br>
+                <strong>Category:</strong> ${data.category || 'Not specified'}<br>
+                <strong>Position:</strong> ${data.position || 'Not specified'}
+              </div>
+              <div>
+                ${data.authorNames ? `<strong>Authors:</strong> ${data.authorNames}<br>` : ''}
+                ${data.repoLink ? `<strong>Repository:</strong> <a href="${data.repoLink}" target="_blank">${data.repoLink}</a><br>` : ''}
+              </div>
+            </div>
+            
+            <div class="project-preview-description">
+              <h3 style="margin-top: 0;">Description</h3>
+              <p>${data.description || 'No description provided.'}</p>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 10px; background: #E8F5E9; border-radius: 4px; font-size: 0.9em;">
+              <p style="margin: 0; color: #2E7D32;">
+                <strong>Preview Note:</strong> This project will appear in a folder styled interface on the 
+                ${data.category === 'both' ? 'Computer and Research' : data.category} page.
+              </p>
+            </div>
+          </div>
+        `;
+      } catch (error) {
+        return `<div style="color: red; padding: 20px;">Error rendering preview: ${error.message}</div>`;
+      }
+    });
+
+    // Configure the CMS interface
+    CMS.registerEventListener({
+      name: 'preSave',
+      handler: ({ entry }) => {
+        // This function runs before saving the entry
+        const data = entry.get('data').toJS();
+        
+        // Automatically ensure required fields are present based on project type
+        if (data.type === 'written' && !data.authorNames) {
+          return 'Written projects require author names. Please add at least one author.';
+        }
+        if (data.type === 'computational' && !data.repoLink) {
+          return 'Computational projects require a repository link. Please add a valid repository URL.';
+        }
+        
+        return true; // Allow the save to proceed
+      },
+    });
+
+    // Add helpful information to the CMS interface
+    document.addEventListener('DOMContentLoaded', function() {
+      // Wait for CMS to initialize
+      setTimeout(() => {
+        const header = document.querySelector('.nc-appHeader-content');
+        if (header) {
+          const infoButton = document.createElement('button');
+          infoButton.className = 'nc-button';
+          infoButton.innerHTML = 'Help';
+          infoButton.style.marginLeft = '10px';
+          infoButton.addEventListener('click', () => {
+            alert('Project Management Tips:\n\n• Changes made here are saved to your Git repository\n• To see changes on your site, you must publish them\n• IDs are managed automatically by the application\n• Projects can be reordered in the admin interface\n• Sync your local environment with the CMS using the "Sync with CMS" button');
+          });
+          header.appendChild(infoButton);
+        }
+      }, 1000);
+    });
+
+    // Initialize Netlify CMS manually if needed
     if (window.CMS_MANUAL_INIT) {
       window.CMS.init({
         config: {
@@ -36,7 +212,6 @@
             base_url: 'https://api.netlify.com',
             auth_endpoint: 'auth',
             api_root: 'https://api.github.com',
-            app_id: '', // GitHub OAuth app ID (optional)
             auth_type: 'implicit' // Required for implicit grant
           }
         }

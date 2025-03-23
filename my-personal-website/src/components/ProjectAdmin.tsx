@@ -1,13 +1,68 @@
-import { useState, FormEvent, useRef } from 'react';
+import { useState, FormEvent, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import EncircleButton from './ui/EncircleButton';
 import { useProjects, ProjectData, ProjectType, FolderPosition, ProjectCategory } from '../context/ProjectContext';
+import LoadingIndicator from './ui/LoadingIndicator';
+
+// Import type definitions for Netlify Identity Widget
+// The full type definitions are in src/types/netlify-identity-widget.d.ts
+declare global {
+  interface Window {
+    netlifyIdentity: {
+      on: (event: string, callback: Function) => void;
+      open: (command?: string) => void;
+      currentUser: () => any;
+    };
+  }
+}
+
+// Define a type for drag state
+interface DragState {
+  draggedIndex: number | null;
+  dragOverIndex: number | null;
+}
 
 const ProjectAdmin = () => {
-  const { projects, addProject, updateProject, deleteProject, resetProjects } = useProjects();
+  const { projects, addProject, updateProject, deleteProject, resetProjects, reorderProjects, isLoading, refreshProjects } = useProjects();
   const [editingProject, setEditingProject] = useState<Partial<ProjectData> | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // State for drag and drop
+  const [dragState, setDragState] = useState<DragState>({
+    draggedIndex: null,
+    dragOverIndex: null
+  });
+  
+  // State for Netlify widget
+  const [netlifyCmsReady, setNetlifyCmsReady] = useState(false);
+
+  // Check if Netlify Identity is available
+  useEffect(() => {
+    // Check for Netlify Identity
+    if (window.netlifyIdentity) {
+      setNetlifyCmsReady(true);
+    }
+  }, []);
+
+  // Function to open Netlify CMS
+  const openNetlifyCms = () => {
+    // If Netlify Identity exists, open it
+    if (window.netlifyIdentity) {
+      const user = window.netlifyIdentity.currentUser();
+      
+      if (!user) {
+        // Trigger login if not logged in
+        window.netlifyIdentity.open('login');
+      } else {
+        // If logged in, navigate to admin
+        window.location.href = '/admin/';
+      }
+    } else {
+      // Fallback if Netlify Identity isn't loaded
+      window.location.href = '/admin/';
+    }
+  };
 
   // Initial empty project form
   const emptyProject: Omit<ProjectData, 'id'> = {
@@ -98,8 +153,58 @@ const ProjectAdmin = () => {
 
   // Delete a project
   const handleDelete = (id: number) => {
-    deleteProject(id);
+    if (window.confirm('Are you sure you want to delete this project?')) {
+      deleteProject(id);
+    }
   };
+
+  // Refresh projects from CMS
+  const handleRefresh = async () => {
+    await refreshProjects();
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (index: number) => {
+    setDragState({ ...dragState, draggedIndex: index });
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragState.draggedIndex === null) return;
+    if (dragState.draggedIndex !== index) {
+      setDragState({ ...dragState, dragOverIndex: index });
+    }
+  };
+
+  const handleDrop = () => {
+    if (dragState.draggedIndex !== null && dragState.dragOverIndex !== null && dragState.draggedIndex !== dragState.dragOverIndex) {
+      reorderProjects(dragState.draggedIndex, dragState.dragOverIndex);
+    }
+    setDragState({ draggedIndex: null, dragOverIndex: null });
+  };
+
+  const handleDragEnd = () => {
+    setDragState({ draggedIndex: null, dragOverIndex: null });
+  };
+
+  // Get row class based on drag state
+  const getRowClass = (index: number) => {
+    let classes = "border-b hover:bg-gray-50 cursor-move";
+    
+    if (dragState.draggedIndex === index) {
+      classes += " opacity-50 bg-blue-50";
+    }
+    
+    if (dragState.dragOverIndex === index && dragState.draggedIndex !== index) {
+      classes += " border-t-2 border-blue-500";
+    }
+    
+    return classes;
+  };
+
+  if (isLoading) {
+    return <LoadingIndicator message="Loading projects..." />;
+  }
 
   return (
     <main className="py-12 px-4">
@@ -115,14 +220,12 @@ const ProjectAdmin = () => {
               >
                 Reset to Defaults
               </button>
-              <a 
-                href="/admin/" 
+              <button 
+                onClick={openNetlifyCms}
                 className="text-sm text-gray-600 hover:text-black transition-colors underline ml-4"
-                target="_blank"
-                rel="noopener noreferrer"
               >
                 Open CMS Admin
-              </a>
+              </button>
               <EncircleButton 
                 to="/computer/projects"
                 variant="content"
@@ -132,23 +235,55 @@ const ProjectAdmin = () => {
             </div>
           </div>
           
+          {/* Netlify CMS Integration Banner */}
+          <div className="bg-gradient-to-r from-purple-100 to-indigo-100 p-4 rounded-lg mb-6 border border-indigo-200">
+            <div className="flex items-start md:items-center flex-col md:flex-row">
+              <div className="flex-grow">
+                <h2 className="text-lg font-medium mb-1">Project Management with Netlify CMS</h2>
+                <p className="text-sm text-gray-700">
+                  You can manage your projects either through this interface or using the Netlify CMS.
+                  <br />Changes made here are stored locally, while Netlify CMS changes are saved to your Git repository.
+                </p>
+              </div>
+              <div className="mt-3 md:mt-0">
+                <button 
+                  onClick={handleRefresh}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-700 transition-colors flex items-center"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Sync with CMS
+                </button>
+              </div>
+            </div>
+          </div>
+          
           {/* Project List */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl">Projects</h2>
-              <button 
-                onClick={handleAdd}
-                className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800 transition-colors"
-              >
-                Add New Project
-              </button>
+              <div className="flex space-x-3">
+                <button 
+                  onClick={handleAdd}
+                  className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800 transition-colors"
+                >
+                  Add New Project
+                </button>
+                <button 
+                  onClick={openNetlifyCms}
+                  className="bg-indigo-600 text-white px-4 py-2 text-sm rounded hover:bg-indigo-700 transition-colors"
+                >
+                  Add via Netlify CMS
+                </button>
+              </div>
             </div>
             
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto mb-2">
               <table className="min-w-full border-collapse">
                 <thead>
                   <tr className="border-b">
-                    <th className="px-4 py-2 text-left">ID</th>
+                    <th className="px-4 py-2 text-left">Order</th>
                     <th className="px-4 py-2 text-left">File Name</th>
                     <th className="px-4 py-2 text-left">Title</th>
                     <th className="px-4 py-2 text-left">Type</th>
@@ -158,9 +293,28 @@ const ProjectAdmin = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {projects.map(project => (
-                    <tr key={project.id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-2">{project.id}</td>
+                  {projects.map((project, index) => (
+                    <tr 
+                      key={project.id} 
+                      className={getRowClass(index)}
+                      draggable={true}
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDrop={handleDrop}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <td className="px-4 py-2">
+                        <div className="flex items-center">
+                          <span className="mr-2 text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <line x1="8" y1="6" x2="16" y2="6"></line>
+                              <line x1="8" y1="12" x2="16" y2="12"></line>
+                              <line x1="8" y1="18" x2="16" y2="18"></line>
+                            </svg>
+                          </span>
+                          {index + 1}
+                        </div>
+                      </td>
                       <td className="px-4 py-2">{project.fileName}</td>
                       <td className="px-4 py-2">{project.projectTitle}</td>
                       <td className="px-4 py-2">{project.type}</td>
@@ -354,20 +508,46 @@ const ProjectAdmin = () => {
             </div>
           )}
           
-          {/* Implementation Notes */}
-          <div className="border-t border-gray-200 pt-6 mt-4">
-            <h2 className="text-lg mb-2">Implementation Notes</h2>
-            <p className="text-sm mb-4">
-              This admin interface now uses localStorage to persist your changes between sessions. In a production environment, you would:
-            </p>
-            <ul className="list-disc ml-5 text-sm space-y-1">
-              <li>Connect to a backend API for CRUD operations</li>
-              <li>Implement secure file uploads to a storage service</li>
-              <li>Add authentication and authorization</li>
-              <li>Include validation and error handling</li>
-              <li>Add pagination for large project collections</li>
-              <li>Implement search and filtering</li>
-            </ul>
+          {/* Netlify CMS Information */}
+          <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
+            <h2 className="text-lg font-bold mb-3">Using Netlify CMS for Project Management</h2>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-md font-medium mb-2">Benefits</h3>
+                <ul className="list-disc ml-5 text-sm space-y-1">
+                  <li>Version control through Git</li>
+                  <li>Collaborative editing</li>
+                  <li>Markdown and rich text support</li>
+                  <li>Media library for images</li>
+                  <li>Content previews before publishing</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="text-md font-medium mb-2">Getting Started</h3>
+                <p className="text-sm mb-3">
+                  Click "Open CMS Admin" to access the Netlify CMS interface. You'll need to authenticate 
+                  with your Git provider (GitHub, GitLab, etc.) to make changes.
+                </p>
+                <button
+                  onClick={openNetlifyCms}
+                  className="bg-indigo-600 text-white px-4 py-2 text-sm rounded hover:bg-indigo-700 transition-colors"
+                >
+                  Open Netlify CMS
+                </button>
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <h3 className="text-md font-medium mb-2">Workflow</h3>
+              <ol className="list-decimal ml-5 text-sm space-y-1">
+                <li>Add or edit projects using either this interface or Netlify CMS</li>
+                <li>Changes in Netlify CMS are committed directly to your Git repository</li>
+                <li>Use the "Sync with CMS" button to refresh projects from the latest Git content</li>
+                <li>Drag and drop projects to reorder them in the display</li>
+              </ol>
+            </div>
           </div>
         </div>
       </div>

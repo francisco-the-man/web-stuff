@@ -5,21 +5,23 @@ backend:
   base_url: https://api.netlify.com
   auth_endpoint: auth
   commit_messages:
-    create: 'Create {{collection}} "{{slug}}"'
-    update: 'Update {{collection}} "{{slug}}"'
-    delete: 'Delete {{collection}} "{{slug}}"'
-    uploadMedia: 'Upload "{{path}}"'
-    deleteMedia: 'Delete "{{path}}"'
+    create: 'Create project "{{slug}}"'
+    update: 'Update project "{{slug}}"'
+    delete: 'Delete project "{{slug}}"'
+    uploadMedia: 'Upload image "{{path}}"'
+    deleteMedia: 'Delete image "{{path}}"'
 
 # when using a custom domain, remove this line
 site_url: https://francisco-the-man.github.io/web-stuff/
 display_url: https://francisco-the-man.github.io/web-stuff/
 logo_url: https://francisco-the-man.github.io/web-stuff/PIRATE-LOGO.png
 
-# Optional: enables a staging workflow
+# Enable editorial workflow for content review before publishing
 publish_mode: editorial_workflow
 
+# Media folder is where uploads go in the repo
 media_folder: "public/projects/images"
+# Public folder is the path used in the published site
 public_folder: "/projects/images"
 
 collections:
@@ -32,15 +34,45 @@ collections:
     delete: true
     slug: "{{fileName}}"
     identifier_field: fileName
-    summary: "{{fileName}} - {{projectTitle}}"
-    commit_message: "Update project: {{slug}}"
+    summary: "{{fileName}} - {{projectTitle}} ({{type}})"
+    sortable_fields: ['fileName', 'projectTitle', 'type', 'category']
+    view_filters:
+      - label: "Computer Projects"
+        field: category
+        pattern: "computer"
+      - label: "Research Projects"
+        field: category
+        pattern: "research"
+      - label: "Both Categories"
+        field: category
+        pattern: "both"
+      - label: "Written Works"
+        field: type
+        pattern: "written"
+      - label: "Computational Works"
+        field: type
+        pattern: "computational"
+    editor:
+      preview: true
     fields:
-      - {label: "ID", name: "id", widget: "number", required: true}
-      - {label: "File Name", name: "fileName", widget: "string", required: true}
-      - {label: "Project Title", name: "projectTitle", widget: "string", required: true}
-      - {label: "Description", name: "description", widget: "text", required: true}
-      - {label: "Project Image", name: "projectImg", widget: "image", required: true}
-      - {label: "Type", name: "type", widget: "select", options: ["computational", "written"], required: true}
-      - {label: "Category", name: "category", widget: "select", options: ["research", "computer", "both"], required: true}
-      - {label: "Position", name: "position", widget: "select", options: ["left", "middle", "right"], required: true}
-      - {label: "Repository Link", name: "repoLink", widget: "string", required: false} 
+      # Note: ID field is removed as it's now managed by the application
+      - {label: "File Name", name: "fileName", widget: "string", required: true, hint: "This is the label shown on the folder tab"}
+      - {label: "Project Title", name: "projectTitle", widget: "string", required: true, hint: "The main title of your project"}
+      - {label: "Description", name: "description", widget: "text", required: true, hint: "A brief description of your project (100-200 characters recommended)"}
+      - {label: "Project Image", name: "projectImg", widget: "image", required: true, hint: "This image will be displayed in the project folder"}
+      - {label: "Type", name: "type", widget: "select", options: [
+          {label: "Computational", value: "computational"},
+          {label: "Written", value: "written"}
+        ], required: true}
+      - {label: "Category", name: "category", widget: "select", options: [
+          {label: "Computer", value: "computer"},
+          {label: "Research", value: "research"},
+          {label: "Both", value: "both"}
+        ], required: true, hint: "Determines which page(s) this project appears on"}
+      - {label: "Position", name: "position", widget: "select", options: [
+          {label: "Left", value: "left"},
+          {label: "Middle", value: "middle"},
+          {label: "Right", value: "right"}
+        ], required: true, hint: "Determines the folder position on the page"}
+      - {label: "Author Names", name: "authorNames", widget: "string", required: false, hint: "Required for 'written' project types", pattern: ['.{1,}', "Please add at least one author"]}
+      - {label: "Repository Link", name: "repoLink", widget: "string", required: false, hint: "Required for 'computational' project types", pattern: ['^(https?://.*|)$', "Must be a valid URL or empty"]} 

@@ -5,25 +5,32 @@
     <link rel="icon" type="image/png" href="./PIRATE-LOGO.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Personal Website</title>
-    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <!-- Load Netlify Identity with defer to not block rendering -->
+    <script defer src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="./src/main.tsx"></script>
     <script>
-      if (window.netlifyIdentity) {
-        window.netlifyIdentity.on("init", user => {
-          if (!user) {
-            window.netlifyIdentity.on("login", () => {
-              // Get the base path correctly whether on GitHub Pages or Netlify
-              const basePath = window.location.hostname.includes('github.io') 
-                ? '/web-stuff' 
-                : '';
-              document.location.href = `${basePath}/admin/`;
-            });
-          }
-        });
-      }
+      // Wait for Netlify Identity to load
+      document.addEventListener('DOMContentLoaded', function() {
+        // Only run if Netlify Identity loaded successfully
+        if (window.netlifyIdentity) {
+          window.netlifyIdentity.on("init", user => {
+            if (!user) {
+              window.netlifyIdentity.on("login", () => {
+                // Get the base path correctly whether on GitHub Pages or Netlify
+                const basePath = window.location.hostname.includes('github.io') 
+                  ? '/web-stuff' 
+                  : '';
+                document.location.href = `${basePath}/admin/`;
+              });
+            }
+          });
+        } else {
+          console.log('Netlify Identity not loaded, but site will still work');
+        }
+      });
     </script>
   </body>
 </html>

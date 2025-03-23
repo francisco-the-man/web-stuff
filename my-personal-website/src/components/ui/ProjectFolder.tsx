@@ -49,18 +49,28 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
   className = '',
 }) => {
   const [imageError, setImageError] = useState(false);
+  
+  // Check if the image URL is valid
+  const isValidImageURL = (url: string) => {
+    return url && url !== "" && !url.includes("undefined") && !url.includes("null");
+  };
 
   // Get folder SVG based on position
   const getFolderSvg = () => {
-    switch (position) {
-      case 'left':
-        return folderLSvg;
-      case 'middle':
-        return folderMSvg;
-      case 'right':
-        return folderRSvg;
-      default:
-        return folderLSvg;
+    try {
+      switch (position) {
+        case 'left':
+          return folderLSvg;
+        case 'middle':
+          return folderMSvg;
+        case 'right':
+          return folderRSvg;
+        default:
+          return folderLSvg;
+      }
+    } catch (error) {
+      console.error('Error loading folder SVG:', error);
+      return ''; // Return empty string as fallback
     }
   };
 
@@ -117,7 +127,7 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
           
           {/* Project image with fallback */}
           <div className="w-4/5 mb-4">
-            {imageError ? (
+            {imageError || !isValidImageURL(projectImg) ? (
               <ImagePlaceholder title={projectTitle} />
             ) : (
               <img 
