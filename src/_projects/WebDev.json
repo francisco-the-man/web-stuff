@@ -1,0 +1,11 @@
+{
+  "id": 4,
+  "fileName": "WebDev",
+  "projectTitle": "Web Development Portfolio",
+  "projectImg": "/webdev-portfolio.jpg",
+  "description": "A collection of web development projects showcasing my skills in React, TypeScript, and modern CSS frameworks.",
+  "type": "computational",
+  "position": "left",
+  "category": "computer",
+  "repoLink": "https://github.com/francisco-the-man/web-stuff"
+} 

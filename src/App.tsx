@@ -12,8 +12,11 @@ import { ProjectProvider } from './context/ProjectContext';
 import ChaosEffect from './components/ChaosEffect';
 
 function App() {
+  // Get the base path from the environment or use the default
+  const basePath = import.meta.env.BASE_URL || '/';
+  
   return (
-    <Router>
+    <Router basename={basePath}>
       <ChaosProvider>
         <ProjectProvider>
           <div className="flex flex-col min-h-screen bg-white text-black font-ibm-plex-mono">
