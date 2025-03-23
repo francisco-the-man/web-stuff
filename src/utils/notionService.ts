@@ -117,16 +117,24 @@ const mapNotionPageToProject = (page: any, index: number): ProjectData => {
       const urlProperty = properties['ProjectImage'];
       if (urlProperty && urlProperty.url) {
         console.log(`Project ${index + 1}: Found direct URL property for image:`, urlProperty.url);
+        // Make sure the URL doesn't have a leading slash
         finalImgUrl = urlProperty.url;
       } else if (urlProperty && urlProperty.type === 'url') {
         console.log(`Project ${index + 1}: Found URL type for ProjectImage but no URL value`);
       }
     }
     
+    // Ensure no leading slash on external URLs
+    if (finalImgUrl.startsWith('/http')) {
+      console.log(`Project ${index + 1}: Fixing malformed URL by removing leading slash`);
+      finalImgUrl = finalImgUrl.substring(1);
+    }
+    
     // Log out image URL source for debugging
     if (finalImgUrl !== '/vite.svg') {
       const isGitHubUrl = finalImgUrl.includes('github.io') || 
-                          finalImgUrl.includes('githubusercontent.com');
+                          finalImgUrl.includes('githubusercontent.com') ||
+                          finalImgUrl.includes('github.com');
       console.log(`Project ${index + 1} using ${isGitHubUrl ? 'GitHub' : 'Notion'} hosted image: ${
         finalImgUrl.substring(0, 50)}...`);
     }

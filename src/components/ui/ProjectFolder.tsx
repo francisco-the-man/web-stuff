@@ -68,6 +68,13 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
       return "";
     }
     
+    // Fix malformed URLs with a double protocol (caused by leading slash issue)
+    if (url.startsWith('/http')) {
+      const fixedUrl = url.substring(1);
+      console.log(`ProjectFolder ${fileName}: Fixing URL by removing leading slash: ${fixedUrl}`);
+      return fixedUrl;
+    }
+    
     // If it's a relative URL, make it absolute
     if (url.startsWith('/')) {
       const absoluteUrl = `${window.location.origin}${url}`;
@@ -76,29 +83,30 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
     }
     
     // Handle GitHub URLs specifically
-    if (url.includes('github.io') || url.includes('githubusercontent.com')) {
+    if (url.includes('github.com') || url.includes('github.io') || url.includes('githubusercontent.com')) {
       console.log(`ProjectFolder ${fileName}: Detected GitHub URL:`, url);
       
-      // Add any special handling for GitHub URLs if needed
-      // For example, if you encounter CORS issues:
+      // Convert github.com/user/repo/blob/main/image.jpg to raw content URL if needed
+      if (url.includes('github.com') && url.includes('/blob/')) {
+        // Convert from regular GitHub URL to raw URL
+        const rawUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+        console.log(`ProjectFolder ${fileName}: Converting GitHub URL to raw URL:`, rawUrl);
+        return rawUrl;
+      }
+      
+      // Add CORS proxy for GitHub URLs if needed
+      // (commented out as this is optional and depends on if you face CORS issues)
       /*
-      const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${url}`;
-      console.log(`Adding CORS proxy to GitHub URL: ${corsProxyUrl}`);
-      return corsProxyUrl;
+      if (url.includes('github.io') || url.includes('githubusercontent.com')) {
+        const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${url}`;
+        console.log(`Adding CORS proxy to GitHub URL: ${corsProxyUrl}`);
+        return corsProxyUrl;
+      }
       */
       
       // For now, just use the URL directly
       return url;
     }
-    
-    // Add CORS proxy for GitHub Pages URLs if needed
-    // (commented out as this is optional and depends on if you face CORS issues)
-    /*
-    if (url.includes('github.io') && !url.includes('raw.githubusercontent.com')) {
-      // This is only needed if you face CORS issues with GitHub Pages
-      return url;
-    }
-    */
     
     console.log(`ProjectFolder ${fileName}: Using original URL:`, url);
     return url;
