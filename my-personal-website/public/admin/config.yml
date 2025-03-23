@@ -22,6 +22,9 @@ media_folder: "public/projects/images"
 # Public folder is the path used in the published site
 public_folder: "/projects/images"
 
+# Properly configure local_backend for development
+local_backend: true
+
 collections:
   - name: "projects"
     label: "Projects"

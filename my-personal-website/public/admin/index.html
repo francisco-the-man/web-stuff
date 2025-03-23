@@ -13,8 +13,12 @@
           window.netlifyIdentity.on("login", () => {
             document.location.href = "/admin/";
           });
+        } else {
+          console.log("User is already logged in");
         }
       });
+    } else {
+      console.warn("Netlify Identity not loaded");
     }
   </script>
   <style>
@@ -101,111 +105,202 @@
 </head>
 <body>
   <!-- Include the script that builds the page and powers Netlify CMS -->
-  <script src="https://unpkg.com/netlify-cms@^2.0.0/dist/netlify-cms.js"></script>
+  <script src="https://unpkg.com/netlify-cms@^2.10.192/dist/netlify-cms.js"></script>
+  
+  <!-- Initialize the CMS -->
   <script>
-    // Register a custom preview template for projects
-    CMS.registerPreviewTemplate('projects', ({ entry }) => {
-      const data = entry.get('data').toJS();
-      try {
-        // Validate required fields based on type
-        if (data.type === 'written' && !data.authorNames) {
-          return `
-            <div style="color: #F44336; padding: 20px; text-align: center; background: #FFEBEE; border-radius: 4px;">
-              <h3>Missing Required Field</h3>
-              <p>Written projects require author names. Please add at least one author.</p>
-            </div>
-          `;
-        }
-        if (data.type === 'computational' && !data.repoLink) {
-          return `
-            <div style="color: #F44336; padding: 20px; text-align: center; background: #FFEBEE; border-radius: 4px;">
-              <h3>Missing Required Field</h3>
-              <p>Computational projects require a repository link. Please add a valid repository URL.</p>
-            </div>
-          `;
-        }
-        
-        // Preview the project data with improved styling
-        return `
-          <div class="project-preview-container">
-            <div class="project-preview-header">
-              <h1 style="margin-top: 0; color: #333;">${data.projectTitle || 'Untitled Project'}</h1>
-              <p style="color: #666; margin-bottom: 0;">
-                <strong>Tab Label:</strong> ${data.fileName || 'Unnamed Tab'}
-              </p>
-            </div>
-            
-            ${data.projectImg ? 
-              `<img src="${data.projectImg}" alt="${data.projectTitle}" class="project-preview-image" />` : 
-              '<div style="padding: 30px; background: #f0f0f0; text-align: center; border-radius: 4px;">No image selected</div>'
-            }
-            
-            <div class="project-preview-meta">
-              <div>
-                <strong>Type:</strong> ${data.type || 'Not specified'}<br>
-                <strong>Category:</strong> ${data.category || 'Not specified'}<br>
-                <strong>Position:</strong> ${data.position || 'Not specified'}
-              </div>
-              <div>
-                ${data.authorNames ? `<strong>Authors:</strong> ${data.authorNames}<br>` : ''}
-                ${data.repoLink ? `<strong>Repository:</strong> <a href="${data.repoLink}" target="_blank">${data.repoLink}</a><br>` : ''}
-              </div>
-            </div>
-            
-            <div class="project-preview-description">
-              <h3 style="margin-top: 0;">Description</h3>
-              <p>${data.description || 'No description provided.'}</p>
-            </div>
-            
-            <div style="margin-top: 15px; padding: 10px; background: #E8F5E9; border-radius: 4px; font-size: 0.9em;">
-              <p style="margin: 0; color: #2E7D32;">
-                <strong>Preview Note:</strong> This project will appear in a folder styled interface on the 
-                ${data.category === 'both' ? 'Computer and Research' : data.category} page.
-              </p>
-            </div>
-          </div>
-        `;
-      } catch (error) {
-        return `<div style="color: red; padding: 20px;">Error rendering preview: ${error.message}</div>`;
+    // Global error handling for CMS
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.error('CMS Error:', message, error);
+      alert('CMS Error: ' + message);
+      return true;
+    };
+
+    // Polyfill for Immutable.js methods to fix getIn errors
+    class SafeMap {
+      constructor(data) {
+        this.data = data || {};
       }
-    });
-
-    // Configure the CMS interface
-    CMS.registerEventListener({
-      name: 'preSave',
-      handler: ({ entry }) => {
-        // This function runs before saving the entry
-        const data = entry.get('data').toJS();
-        
-        // Automatically ensure required fields are present based on project type
-        if (data.type === 'written' && !data.authorNames) {
-          return 'Written projects require author names. Please add at least one author.';
+      
+      getIn(path, defaultValue) {
+        try {
+          let current = this.data;
+          for (const key of path) {
+            if (current === undefined || current === null) {
+              return defaultValue;
+            }
+            current = current[key];
+          }
+          return current === undefined ? defaultValue : current;
+        } catch (e) {
+          console.error('Error in getIn:', e);
+          return defaultValue;
         }
-        if (data.type === 'computational' && !data.repoLink) {
-          return 'Computational projects require a repository link. Please add a valid repository URL.';
+      }
+      
+      toJS() {
+        return this.data;
+      }
+    }
+    
+    // Patch entry handling methods
+    window.fixImmutableIssue = function(entry) {
+      if (!entry || !entry.getIn) {
+        console.warn('Entry object missing getIn method, creating safe wrapper');
+        return new SafeMap(entry);
+      }
+      return entry;
+    };
+
+    // Initialize Netlify CMS with error handling
+    try {
+      // Configure the CMS before init
+      CMS.init({
+        config: {
+          load_config_file: true
+        }
+      });
+      console.log('CMS initialized successfully');
+      
+      // Register a custom preview template for projects
+      CMS.registerPreviewTemplate('projects', ({ entry }) => {
+        // Use our wrapper to handle potential Immutable.js errors
+        entry = window.fixImmutableIssue(entry);
+        
+        let data;
+        try {
+          data = entry.getIn(['data'], {}).toJS();
+          console.log('Preview data:', data);
+        } catch (error) {
+          console.error('Error getting entry data:', error);
+          data = {};
         }
         
-        return true; // Allow the save to proceed
-      },
-    });
+        try {
+          // Validate required fields based on type
+          if (data.type === 'written' && !data.authorNames) {
+            return `
+              <div style="color: #F44336; padding: 20px; text-align: center; background: #FFEBEE; border-radius: 4px;">
+                <h3>Missing Required Field</h3>
+                <p>Written projects require author names. Please add at least one author.</p>
+              </div>
+            `;
+          }
+          if (data.type === 'computational' && !data.repoLink) {
+            return `
+              <div style="color: #F44336; padding: 20px; text-align: center; background: #FFEBEE; border-radius: 4px;">
+                <h3>Missing Required Field</h3>
+                <p>Computational projects require a repository link. Please add a valid repository URL.</p>
+              </div>
+            `;
+          }
+          
+          // Preview the project data with improved styling
+          return `
+            <div class="project-preview-container">
+              <div class="project-preview-header">
+                <h1 style="margin-top: 0; color: #333;">${data.projectTitle || 'Untitled Project'}</h1>
+                <p style="color: #666; margin-bottom: 0;">
+                  <strong>Tab Label:</strong> ${data.fileName || 'Unnamed Tab'}
+                </p>
+              </div>
+              
+              ${data.projectImg ? 
+                `<img src="${data.projectImg}" alt="${data.projectTitle}" class="project-preview-image" />` : 
+                '<div style="padding: 30px; background: #f0f0f0; text-align: center; border-radius: 4px;">No image selected</div>'
+              }
+              
+              <div class="project-preview-meta">
+                <div>
+                  <strong>Type:</strong> ${data.type || 'Not specified'}<br>
+                  <strong>Category:</strong> ${data.category || 'Not specified'}<br>
+                  <strong>Position:</strong> ${data.position || 'Not specified'}
+                </div>
+                <div>
+                  ${data.authorNames ? `<strong>Authors:</strong> ${data.authorNames}<br>` : ''}
+                  ${data.repoLink ? `<strong>Repository:</strong> <a href="${data.repoLink}" target="_blank">${data.repoLink}</a><br>` : ''}
+                </div>
+              </div>
+              
+              <div class="project-preview-description">
+                <h3 style="margin-top: 0;">Description</h3>
+                <p>${data.description || 'No description provided.'}</p>
+              </div>
+              
+              <div style="margin-top: 15px; padding: 10px; background: #E8F5E9; border-radius: 4px; font-size: 0.9em;">
+                <p style="margin: 0; color: #2E7D32;">
+                  <strong>Preview Note:</strong> This project will appear in a folder styled interface on the 
+                  ${data.category === 'both' ? 'Computer and Research' : data.category} page.
+                </p>
+              </div>
+            </div>
+          `;
+        } catch (error) {
+          return `<div style="color: red; padding: 20px;">Error rendering preview: ${error.message}</div>`;
+        }
+      });
 
-    // Add helpful information to the CMS interface
-    document.addEventListener('DOMContentLoaded', function() {
-      // Wait for CMS to initialize
-      setTimeout(() => {
-        const header = document.querySelector('.nc-appHeader-content');
-        if (header) {
-          const infoButton = document.createElement('button');
-          infoButton.className = 'nc-button';
-          infoButton.innerHTML = 'Help';
-          infoButton.style.marginLeft = '10px';
-          infoButton.addEventListener('click', () => {
-            alert('Project Management Tips:\n\n• Changes made here are saved to your Git repository\n• To see changes on your site, you must publish them\n• IDs are managed automatically by the application\n• Projects can be reordered in the admin interface\n• Sync your local environment with the CMS using the "Sync with CMS" button');
+      // Configure the CMS interface
+      CMS.registerEventListener({
+        name: 'preSave',
+        handler: ({ entry }) => {
+          // Use our wrapper to handle potential Immutable.js errors
+          entry = window.fixImmutableIssue(entry);
+          
+          let data;
+          try {
+            data = entry.getIn(['data'], {}).toJS();
+            console.log('Saving entry data:', data);
+          } catch (error) {
+            console.error('Error getting entry data in preSave:', error);
+            return 'Error processing form data. Please try again.';
+          }
+          
+          // Automatically ensure required fields are present based on project type
+          if (data.type === 'written' && !data.authorNames) {
+            return 'Written projects require author names. Please add at least one author.';
+          }
+          if (data.type === 'computational' && !data.repoLink) {
+            return 'Computational projects require a repository link. Please add a valid repository URL.';
+          }
+          
+          return true; // Allow the save to proceed
+        },
+      });
+
+      // Add helpful information to the CMS interface
+      document.addEventListener('DOMContentLoaded', function() {
+        // Wait for CMS to initialize
+        setTimeout(() => {
+          const header = document.querySelector('.nc-appHeader-content');
+          if (header) {
+            const infoButton = document.createElement('button');
+            infoButton.className = 'nc-button';
+            infoButton.innerHTML = 'Help';
+            infoButton.style.marginLeft = '10px';
+            infoButton.addEventListener('click', () => {
+              alert('Project Management Tips:\n\n• Changes made here are saved to your Git repository\n• To see changes on your site, you must publish them\n• IDs are managed automatically by the application\n• Projects can be reordered in the admin interface\n• Sync your local environment with the CMS using the "Sync with CMS" button');
+            });
+            header.appendChild(infoButton);
+          }
+        }, 1000);
+      });
+    } catch (error) {
+      console.error('CMS initialization error:', error);
+      alert('Failed to initialize CMS: ' + error.message);
+    }
+    
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.on("init", user => {
+        if (!user) {
+          window.netlifyIdentity.on("login", () => {
+            document.location.href = "/admin/";
           });
-          header.appendChild(infoButton);
+        } else {
+          console.log("User is already logged in");
         }
-      }, 1000);
-    });
+      });
+    }
   </script>
 </body>
 </html> 
