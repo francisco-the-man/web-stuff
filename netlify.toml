@@ -1,6 +1,6 @@
 [build]
-  base = "my-personal-website"
-  command = "rm -rf node_modules && npm install --legacy-peer-deps && npm run build"
+  base = "."
+  command = "npm install && npm run build"
   publish = "dist"
 
 # Redirect all routes to index.html for single-page application
