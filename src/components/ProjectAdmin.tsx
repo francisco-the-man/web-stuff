@@ -460,21 +460,9 @@ const ProjectAdmin = () => {
                       <option value="research">Research</option>
                       <option value="both">Both</option>
                     </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Folder Position</label>
-                    <select
-                      name="position"
-                      value={editingProject.position || 'left'}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded"
-                      required
-                    >
-                      <option value="left">Left</option>
-                      <option value="middle">Middle</option>
-                      <option value="right">Right</option>
-                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      In Notion, you can select multiple categories (Computer, Research, or both).
+                    </p>
                   </div>
                   
                   <div className="md:col-span-2">

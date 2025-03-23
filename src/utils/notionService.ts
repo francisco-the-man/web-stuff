@@ -19,6 +19,9 @@ const getFunctionUrl = (functionPath: string): string => {
   return `/.netlify/functions/${functionPath}`;
 };
 
+// Array of positions to cycle through
+const positions: FolderPosition[] = ['left', 'middle', 'right'];
+
 // Function to map Notion properties to ProjectData fields
 const mapNotionPageToProject = (page: any, index: number): ProjectData => {
   try {
@@ -45,6 +48,10 @@ const mapNotionPageToProject = (page: any, index: number): ProjectData => {
           return property.select && property.select.name 
             ? property.select.name
             : defaultValue;
+        case 'multi_select':
+          return property.multi_select && Array.isArray(property.multi_select)
+            ? property.multi_select.map((option: any) => option.name)
+            : [];
         case 'files':
           return property.files && property.files.length > 0 && property.files[0].file
             ? property.files[0].file.url
@@ -54,6 +61,36 @@ const mapNotionPageToProject = (page: any, index: number): ProjectData => {
       }
     };
     
+    // Handle multiple select for Category
+    const determineCategory = (): ProjectCategory => {
+      const categoryProperty = properties['Category'];
+      
+      // If property doesn't exist or isn't a multi_select, default to computer
+      if (!categoryProperty || !categoryProperty.multi_select) {
+        return 'computer';
+      }
+      
+      // Extract selected options
+      const selections = categoryProperty.multi_select.map((option: any) => option.name.toLowerCase());
+      
+      // Check selected categories
+      const hasComputer = selections.includes('computer');
+      const hasResearch = selections.includes('research');
+      
+      // Determine category based on selections
+      if (hasComputer && hasResearch) {
+        return 'both';
+      } else if (hasResearch) {
+        return 'research';
+      } else {
+        // Default to computer if neither or only computer is selected
+        return 'computer';
+      }
+    };
+    
+    // Automatically assign position based on index
+    const position: FolderPosition = positions[index % positions.length];
+    
     // Build the project data object
     return {
       id: index + 1,
@@ -62,8 +99,8 @@ const mapNotionPageToProject = (page: any, index: number): ProjectData => {
       description: getValue('Description', 'rich_text', 'No description provided'),
       projectImg: getValue('ProjectImage', 'files', '/vite.svg'),
       type: getValue('Type', 'select', 'computational') as ProjectType,
-      position: getValue('Position', 'select', 'left') as FolderPosition,
-      category: getValue('Category', 'select', 'computer') as ProjectCategory,
+      position: position, // Automatically assigned based on index
+      category: determineCategory(), // Using our new function
       authorNames: getValue('AuthorNames', 'rich_text', ''),
       repoLink: getValue('RepoLink', 'url', '')
     };
@@ -76,7 +113,7 @@ const mapNotionPageToProject = (page: any, index: number): ProjectData => {
       description: 'There was an error loading this project from Notion',
       projectImg: '/vite.svg',
       type: 'computational',
-      position: 'left',
+      position: positions[index % positions.length], // Still assign position even in error case
       category: 'computer',
       repoLink: '#'
     };
