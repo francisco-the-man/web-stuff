@@ -1,7 +1,9 @@
 backend:
-  name: git-gateway
-  branch: main # Branch to update
+  name: github
   repo: francisco-the-man/web-stuff # Your GitHub repo
+  branch: main # Branch to update
+  base_url: https://api.netlify.com
+  auth_endpoint: auth
   commit_messages:
     create: 'Create {{collection}} "{{slug}}"'
     update: 'Update {{collection}} "{{slug}}"'
@@ -17,13 +19,13 @@ logo_url: https://francisco-the-man.github.io/web-stuff/PIRATE-LOGO.png
 # Optional: enables a staging workflow
 publish_mode: editorial_workflow
 
-media_folder: "public/projects/images" # Media files will be stored in the repo
+media_folder: "my-personal-website/public/projects/images" # Media files will be stored in the repo
 public_folder: "/projects/images" # The src attribute for uploaded media
 
 collections:
   - name: "projects" # Used in routes, e.g., /admin/collections/projects
     label: "Project" # Used in the UI
-    folder: "src/_projects" # The path to the folder where the documents are stored
+    folder: "my-personal-website/src/_projects" # The path to the folder where the documents are stored
     create: true # Allow users to create new documents in this collection
     slug: "{{slug}}" # Filename template, e.g., project-name.md
     extension: "json"
