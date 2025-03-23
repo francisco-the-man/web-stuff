@@ -53,9 +53,24 @@ const mapNotionPageToProject = (page: any, index: number): ProjectData => {
             ? property.multi_select.map((option: any) => option.name)
             : [];
         case 'files':
-          return property.files && property.files.length > 0 && property.files[0].file
-            ? property.files[0].file.url
-            : defaultValue;
+          // Handle files with improved URL extraction
+          if (property.files && property.files.length > 0) {
+            // Check if it's an external URL (preferred - won't expire)
+            if (property.files[0].type === 'external' && property.files[0].external) {
+              return property.files[0].external.url || defaultValue;
+            }
+            // Or a Notion-hosted file (will expire)
+            else if (property.files[0].type === 'file' && property.files[0].file) {
+              // Log a warning about expiring URL
+              console.warn(`Project ${index} is using a Notion-hosted image which will expire. Consider using an external image URL.`);
+              return property.files[0].file.url || defaultValue;
+            }
+            // Or an empty file array
+            else {
+              return defaultValue;
+            }
+          }
+          return defaultValue;
         default:
           return defaultValue;
       }
@@ -91,13 +106,24 @@ const mapNotionPageToProject = (page: any, index: number): ProjectData => {
     // Automatically assign position based on index
     const position: FolderPosition = positions[index % positions.length];
     
+    // Get project image URL
+    const projectImgUrl = getValue('ProjectImage', 'files', '/vite.svg');
+    
+    // Log out image URL source for debugging
+    if (projectImgUrl !== '/vite.svg') {
+      const isGitHubUrl = projectImgUrl.includes('github.io') || 
+                          projectImgUrl.includes('githubusercontent.com');
+      console.log(`Project ${index + 1} using ${isGitHubUrl ? 'GitHub' : 'Notion'} hosted image: ${
+        projectImgUrl.substring(0, 50)}...`);
+    }
+    
     // Build the project data object
     return {
       id: index + 1,
       fileName: getValue('Name', 'title', `Project ${index + 1}`),
       projectTitle: getValue('ProjectTitle', 'rich_text', `Untitled Project ${index + 1}`),
       description: getValue('Description', 'rich_text', 'No description provided'),
-      projectImg: getValue('ProjectImage', 'files', '/vite.svg'),
+      projectImg: projectImgUrl,
       type: getValue('Type', 'select', 'computational') as ProjectType,
       position: position, // Automatically assigned based on index
       category: determineCategory(), // Using our new function

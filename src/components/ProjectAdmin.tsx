@@ -603,6 +603,35 @@ const ProjectAdmin = () => {
                 <li>Drag and drop projects to reorder them in the display</li>
               </ol>
             </div>
+
+            {/* Add new section for GitHub image hosting */}
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <h3 className="text-md font-medium mb-2">Image Hosting with GitHub</h3>
+              <div className="bg-blue-50 p-3 rounded border border-blue-200 mb-3">
+                <p className="text-sm">
+                  <strong>Important:</strong> For permanent image links, use GitHub-hosted images in your Notion database 
+                  instead of uploading images directly to Notion.
+                </p>
+              </div>
+              <ol className="list-decimal ml-5 text-sm space-y-1">
+                <li>Upload your image to a GitHub repository (via GitHub web interface)</li>
+                <li>Get the GitHub Pages URL for your image:
+                  <code className="block bg-gray-100 p-2 text-xs mt-1 rounded">
+                    https://[username].github.io/[repo-name]/path/to/image.jpg
+                  </code>
+                </li>
+                <li>In your Notion database, add this URL to the ProjectImage field
+                  <ul className="list-disc ml-5 text-xs mt-1">
+                    <li>Use "Link" or "External" option when adding the image</li>
+                    <li>Do not upload the image directly to Notion</li>
+                  </ul>
+                </li>
+                <li>Refresh projects to see the change</li>
+              </ol>
+              <p className="text-xs text-gray-500 mt-2">
+                Notion-hosted images expire after a short time, while GitHub-hosted images are permanent.
+              </p>
+            </div>
           </div>
         </div>
       </div>

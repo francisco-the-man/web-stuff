@@ -15,9 +15,14 @@ const GitHubLogo = () => (
 );
 
 // Placeholder image component
-const ImagePlaceholder = ({ title }: { title: string }) => (
-  <div className="w-full h-36 bg-gray-100 border border-gray-300 flex items-center justify-center">
-    <p className="text-gray-500 text-sm text-center px-4">{title}</p>
+const ImagePlaceholder = ({ title, error }: { title: string, error?: string }) => (
+  <div className="w-full h-36 bg-gray-100 border border-gray-300 flex flex-col items-center justify-center p-2">
+    <p className="text-gray-500 text-sm text-center">{title}</p>
+    {error && (
+      <p className="text-red-500 text-xs mt-1 text-center">
+        {error.length > 60 ? error.substring(0, 60) + '...' : error}
+      </p>
+    )}
   </div>
 );
 
@@ -48,11 +53,30 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
   repoLink,
   className = '',
 }) => {
-  const [imageError, setImageError] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
   
-  // Check if the image URL is valid
-  const isValidImageURL = (url: string) => {
-    return url && url !== "" && !url.includes("undefined") && !url.includes("null");
+  // Check if the image URL is valid and return a potentially modified URL
+  const getImageUrl = (url: string): string => {
+    if (!url || url === "" || url.includes("undefined") || url.includes("null")) {
+      // Invalid URL, don't attempt to process it
+      return "";
+    }
+    
+    // If it's a relative URL, make it absolute
+    if (url.startsWith('/')) {
+      return `${window.location.origin}${url}`;
+    }
+    
+    // Add CORS proxy for GitHub Pages URLs if needed
+    // (commented out as this is optional and depends on if you face CORS issues)
+    /*
+    if (url.includes('github.io') && !url.includes('raw.githubusercontent.com')) {
+      // This is only needed if you face CORS issues with GitHub Pages
+      return url;
+    }
+    */
+    
+    return url;
   };
 
   // Get folder SVG based on position
@@ -103,6 +127,15 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
     }
   };
 
+  // Handle image error with more details
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.target as HTMLImageElement;
+    setImageError(`Failed to load image: ${target.src.substring(0, 30)}...`);
+    console.error('Image failed to load:', target.src);
+  };
+
+  const processedImageUrl = getImageUrl(projectImg);
+
   return (
     <div className={`absolute top-[20%] w-full max-w-xl mx-auto ${className}`}>
       {/* Folder graphic with content positioned on top */}
@@ -125,16 +158,20 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
           {/* Project title */}
           <h3 className="text-2xl font-bold uppercase mb-4 text-center">{projectTitle}</h3>
           
-          {/* Project image with fallback */}
+          {/* Project image with improved fallback */}
           <div className="w-4/5 mb-4">
-            {imageError || !isValidImageURL(projectImg) ? (
-              <ImagePlaceholder title={projectTitle} />
+            {imageError || !processedImageUrl ? (
+              <ImagePlaceholder 
+                title={imageError ? "Image failed to load" : "No image available"} 
+                error={imageError || undefined}
+              />
             ) : (
               <img 
-                src={projectImg} 
+                src={processedImageUrl} 
                 alt={projectTitle} 
                 className="w-full h-36 object-cover border border-gray-200"
-                onError={() => setImageError(true)}
+                onError={handleImageError}
+                loading="lazy" // Add lazy loading for better performance
               />
             )}
           </div>
