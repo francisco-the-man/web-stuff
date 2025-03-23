@@ -9,5 +9,39 @@
 <body>
   <!-- Include the script that builds the page and powers Netlify CMS -->
   <script src="https://unpkg.com/netlify-cms@^2.0.0/dist/netlify-cms.js"></script>
+  <script>
+    // GitHub Pages deployment support
+    if (window.location.hostname.includes('github.io')) {
+      // Use a custom backend config for GitHub Pages
+      window.CMS_MANUAL_INIT = true;
+      window.netlifyIdentity = {
+        on: (event, callback) => {
+          if (event === 'init') {
+            callback(null);
+          }
+        },
+        open: () => {
+          window.open('https://app.netlify.com/sites/YOUR_NETLIFY_SITE_NAME/identity', '_blank');
+        }
+      };
+    }
+    // Initialize Netlify CMS manually
+    if (window.CMS_MANUAL_INIT) {
+      window.CMS.init({
+        config: {
+          backend: {
+            name: 'github',
+            repo: 'francisco-the-man/web-stuff',
+            branch: 'main',
+            base_url: 'https://api.netlify.com',
+            auth_endpoint: 'auth',
+            api_root: 'https://api.github.com',
+            app_id: '', // GitHub OAuth app ID (optional)
+            auth_type: 'implicit' // Required for implicit grant
+          }
+        }
+      });
+    }
+  </script>
 </body>
 </html> 

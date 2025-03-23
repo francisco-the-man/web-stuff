@@ -15,7 +15,11 @@
         window.netlifyIdentity.on("init", user => {
           if (!user) {
             window.netlifyIdentity.on("login", () => {
-              document.location.href = "./admin/";
+              // Get the base path correctly whether on GitHub Pages or Netlify
+              const basePath = window.location.hostname.includes('github.io') 
+                ? '/web-stuff' 
+                : '';
+              document.location.href = `${basePath}/admin/`;
             });
           }
         });

@@ -1,6 +1,14 @@
 backend:
   name: git-gateway
-  branch: main # Branch to update (optional; defaults to master)
+  branch: main # Branch to update
+  repo: francisco-the-man/web-stuff # Add your GitHub repo
+
+# when using a custom domain, remove this line
+site_url: https://francisco-the-man.github.io/web-stuff/
+display_url: https://francisco-the-man.github.io/web-stuff/
+logo_url: https://francisco-the-man.github.io/web-stuff/PIRATE-LOGO.png
+
+# publish_mode: editorial_workflow # Optional: enables a staging workflow
 
 media_folder: "public/projects/images" # Media files will be stored in the repo under public/projects/images
 public_folder: "/projects/images" # The src attribute for uploaded media will begin with /projects/images
