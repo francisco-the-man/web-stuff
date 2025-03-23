@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import EncircleButton from './ui/EncircleButton';
 import { useProjects, ProjectData, ProjectType, FolderPosition, ProjectCategory } from '../context/ProjectContext';
 import LoadingIndicator from './ui/LoadingIndicator';
+import { testNotionConnection } from '../utils/notionService';
 
 // Import type definitions for Netlify Identity Widget
 // The full type definitions are in src/types/netlify-identity-widget.d.ts
@@ -36,6 +37,10 @@ const ProjectAdmin = () => {
   
   // State for Netlify widget
   const [netlifyCmsReady, setNetlifyCmsReady] = useState(false);
+  
+  // State for Notion connection
+  const [notionConnectionStatus, setNotionConnectionStatus] = useState<'untested' | 'connected' | 'error'>('untested');
+  const [isTesting, setIsTesting] = useState(false);
 
   // Check if Netlify Identity is available
   useEffect(() => {
@@ -75,6 +80,20 @@ const ProjectAdmin = () => {
     category: 'computer',
     authorNames: '',
     repoLink: '',
+  };
+
+  // Test Notion connection
+  const handleTestNotionConnection = async () => {
+    setIsTesting(true);
+    try {
+      const result = await testNotionConnection();
+      setNotionConnectionStatus(result ? 'connected' : 'error');
+    } catch (error) {
+      console.error('Error testing Notion connection:', error);
+      setNotionConnectionStatus('error');
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   // Handle form submission for adding/editing a project
@@ -158,7 +177,7 @@ const ProjectAdmin = () => {
     }
   };
 
-  // Refresh projects from CMS
+  // Refresh projects from Notion
   const handleRefresh = async () => {
     await refreshProjects();
   };
@@ -235,25 +254,71 @@ const ProjectAdmin = () => {
             </div>
           </div>
           
-          {/* Netlify CMS Integration Banner */}
-          <div className="bg-gradient-to-r from-purple-100 to-indigo-100 p-4 rounded-lg mb-6 border border-indigo-200">
+          {/* Notion Integration Banner */}
+          <div className="bg-gradient-to-r from-blue-100 to-cyan-100 p-4 rounded-lg mb-6 border border-blue-200">
             <div className="flex items-start md:items-center flex-col md:flex-row">
               <div className="flex-grow">
-                <h2 className="text-lg font-medium mb-1">Project Management with Netlify CMS</h2>
+                <h2 className="text-lg font-medium mb-1">Project Management with Notion</h2>
                 <p className="text-sm text-gray-700">
-                  You can manage your projects either through this interface or using the Netlify CMS.
-                  <br />Changes made here are stored locally, while Netlify CMS changes are saved to your Git repository.
+                  Your projects are loaded from a Notion database and cached locally.
+                  <br />Changes made in Notion will be reflected here when you refresh.
                 </p>
+                <div className="mt-2">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    notionConnectionStatus === 'connected' ? 'bg-green-100 text-green-800' :
+                    notionConnectionStatus === 'error' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    <span className={`w-2 h-2 mr-1.5 rounded-full ${
+                      notionConnectionStatus === 'connected' ? 'bg-green-400' :
+                      notionConnectionStatus === 'error' ? 'bg-red-400' :
+                      'bg-gray-400'
+                    }`}></span>
+                    {notionConnectionStatus === 'connected' ? 'Connected to Notion' :
+                     notionConnectionStatus === 'error' ? 'Connection Error' :
+                     'Connection Status Unknown'}
+                  </span>
+                </div>
               </div>
-              <div className="mt-3 md:mt-0">
+              <div className="mt-3 md:mt-0 flex space-x-2">
+                <button 
+                  onClick={handleTestNotionConnection}
+                  className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isTesting}
+                >
+                  {isTesting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Testing
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Test Connection
+                    </>
+                  )}
+                </button>
                 <button 
                   onClick={handleRefresh}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-700 transition-colors flex items-center"
+                  className="px-3 py-2 bg-cyan-600 text-white rounded-md text-sm hover:bg-cyan-700 transition-colors flex items-center"
+                  disabled={isLoading}
                 >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Sync with CMS
+                  {isLoading ? (
+                    <svg className="animate-spin w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  )}
+                  Refresh Projects
                 </button>
               </div>
             </div>
@@ -269,12 +334,6 @@ const ProjectAdmin = () => {
                   className="bg-black text-white px-4 py-2 text-sm rounded hover:bg-gray-800 transition-colors"
                 >
                   Add New Project
-                </button>
-                <button 
-                  onClick={openNetlifyCms}
-                  className="bg-indigo-600 text-white px-4 py-2 text-sm rounded hover:bg-indigo-700 transition-colors"
-                >
-                  Add via Netlify CMS
                 </button>
               </div>
             </div>
@@ -508,43 +567,51 @@ const ProjectAdmin = () => {
             </div>
           )}
           
-          {/* Netlify CMS Information */}
+          {/* Notion Information Panel */}
           <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
-            <h2 className="text-lg font-bold mb-3">Using Netlify CMS for Project Management</h2>
+            <h2 className="text-lg font-bold mb-3">Using Notion for Project Management</h2>
             
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-md font-medium mb-2">Benefits</h3>
                 <ul className="list-disc ml-5 text-sm space-y-1">
-                  <li>Version control through Git</li>
-                  <li>Collaborative editing</li>
-                  <li>Markdown and rich text support</li>
-                  <li>Media library for images</li>
-                  <li>Content previews before publishing</li>
+                  <li>Centralized database in Notion</li>
+                  <li>Easy-to-use interface for content management</li>
+                  <li>Rich media support for images</li>
+                  <li>Collaborative editing with your team</li>
+                  <li>Structured data with validation</li>
                 </ul>
               </div>
               
               <div>
                 <h3 className="text-md font-medium mb-2">Getting Started</h3>
                 <p className="text-sm mb-3">
-                  Click "Open CMS Admin" to access the Netlify CMS interface. You'll need to authenticate 
-                  with your Git provider (GitHub, GitLab, etc.) to make changes.
+                  Your projects are stored in a Notion database and loaded via the Notion API. 
+                  Use the test and refresh buttons to check connection status and update content.
                 </p>
-                <button
-                  onClick={openNetlifyCms}
-                  className="bg-indigo-600 text-white px-4 py-2 text-sm rounded hover:bg-indigo-700 transition-colors"
-                >
-                  Open Netlify CMS
-                </button>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleRefresh}
+                    className="bg-cyan-600 text-white px-4 py-2 text-sm rounded hover:bg-cyan-700 transition-colors"
+                  >
+                    Refresh Projects
+                  </button>
+                  <button
+                    onClick={handleTestNotionConnection}
+                    className="bg-blue-600 text-white px-4 py-2 text-sm rounded hover:bg-blue-700 transition-colors"
+                  >
+                    Test Connection
+                  </button>
+                </div>
               </div>
             </div>
             
             <div className="mt-6 pt-4 border-t border-gray-200">
               <h3 className="text-md font-medium mb-2">Workflow</h3>
               <ol className="list-decimal ml-5 text-sm space-y-1">
-                <li>Add or edit projects using either this interface or Netlify CMS</li>
-                <li>Changes in Netlify CMS are committed directly to your Git repository</li>
-                <li>Use the "Sync with CMS" button to refresh projects from the latest Git content</li>
+                <li>Add or edit projects in your Notion database</li>
+                <li>Click "Refresh Projects" to load the latest data from Notion</li>
+                <li>Local changes made in this interface are stored in your browser</li>
                 <li>Drag and drop projects to reorder them in the display</li>
               </ol>
             </div>

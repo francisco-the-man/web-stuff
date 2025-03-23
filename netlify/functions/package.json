@@ -1,0 +1,10 @@
+{
+  "name": "netlify-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for personal website",
+  "main": "index.js",
+  "dependencies": {
+    "@netlify/functions": "^1.6.0",
+    "@notionhq/client": "^2.2.14"
+  }
+} 
