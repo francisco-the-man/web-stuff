@@ -72,7 +72,7 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
     if (url.startsWith('/http')) {
       const fixedUrl = url.substring(1);
       console.log(`ProjectFolder ${fileName}: Fixing URL by removing leading slash: ${fixedUrl}`);
-      return fixedUrl;
+      return getImageUrl(fixedUrl); // Process the fixed URL again to apply other rules
     }
     
     // If it's a relative URL, make it absolute
@@ -86,11 +86,11 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
     if (url.includes('github.com') || url.includes('github.io') || url.includes('githubusercontent.com')) {
       console.log(`ProjectFolder ${fileName}: Detected GitHub URL:`, url);
       
-      // Convert github.com/user/repo/blob/main/image.jpg to raw content URL if needed
+      // Convert github.com/user/repo/blob/main/image.jpg to raw content URL
       if (url.includes('github.com') && url.includes('/blob/')) {
         // Convert from regular GitHub URL to raw URL
         const rawUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-        console.log(`ProjectFolder ${fileName}: Converting GitHub URL to raw URL:`, rawUrl);
+        console.log(`ProjectFolder ${fileName}: Converting GitHub blob URL to raw URL:`, rawUrl);
         return rawUrl;
       }
       

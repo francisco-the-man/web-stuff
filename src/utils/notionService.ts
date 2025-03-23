@@ -130,6 +130,13 @@ const mapNotionPageToProject = (page: any, index: number): ProjectData => {
       finalImgUrl = finalImgUrl.substring(1);
     }
     
+    // Convert GitHub blob URLs to raw content URLs
+    if (finalImgUrl.includes('github.com') && finalImgUrl.includes('/blob/')) {
+      const rawUrl = finalImgUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+      console.log(`Project ${index + 1}: Converting GitHub blob URL to raw URL: ${rawUrl.substring(0, 50)}...`);
+      finalImgUrl = rawUrl;
+    }
+    
     // Log out image URL source for debugging
     if (finalImgUrl !== '/vite.svg') {
       const isGitHubUrl = finalImgUrl.includes('github.io') || 
