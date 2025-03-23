@@ -1,15 +1,22 @@
 [build]
   base = "."
-  command = "npm install && npm run build"
+  command = "npm install --force && npm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "18"
+  NPM_FLAGS = "--prefer-offline --no-audit --no-fund --legacy-peer-deps"
 
 # Redirect all routes to index.html for single-page application
 [[redirects]]
   from = "/*"
   to = "/index.html"
+  status = 200
+
+# Admin routes should return admin/index.html for client-side routing
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
   status = 200
 
 # Assets folder should return 404 if files not found

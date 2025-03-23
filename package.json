@@ -12,6 +12,7 @@
     "cms-proxy": "npx decap-server"
   },
   "dependencies": {
+    "@notionhq/client": "^2.2.14",
     "@types/matter-js": "^0.19.8",
     "dotenv": "^16.4.7",
     "matter-js": "^0.20.0",
