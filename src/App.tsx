@@ -6,6 +6,9 @@ import Computer from './components/Computer';
 import Projects from './components/Projects';
 import Research from './components/Research';
 import ProjectAdmin from './components/ProjectAdmin';
+import Creative from './components/Creative';
+import PhysicalMedia from './components/PhysicalMedia';
+import Clothing from './components/Clothing';
 import Footer from './components/Footer';
 import { ChaosProvider } from './context/ChaosContext';
 import { ProjectProvider } from './context/ProjectContext';
@@ -33,7 +36,9 @@ function App() {
                 <Route path="/research" element={<Research />} />
                 <Route path="/research/projects" element={<Research />} />
                 <Route path="/computer/projects/admin" element={<ProjectAdmin />} />
-                <Route path="/creative" element={<div className="py-12 px-4 text-center">Creative page coming soon</div>} />
+                <Route path="/creative" element={<Creative />} />
+                <Route path="/creative/physical-media" element={<PhysicalMedia />} />
+                <Route path="/creative/clothing" element={<Clothing />} />
               </Routes>
             </div>
             <Footer />
