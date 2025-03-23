@@ -5,22 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Project Manager - Content Management System</title>
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-  <script>
-    // Enhanced Identity handling
-    if (window.netlifyIdentity) {
-      window.netlifyIdentity.on("init", user => {
-        if (!user) {
-          window.netlifyIdentity.on("login", () => {
-            document.location.href = "/admin/";
-          });
-        } else {
-          console.log("User is already logged in");
-        }
-      });
-    } else {
-      console.warn("Netlify Identity not loaded");
-    }
-  </script>
   <style>
     /* Custom styles for better CMS experience */
     :root {
@@ -41,7 +25,22 @@
       margin: 0 auto !important;
     }
     
-    /* Improve image preview size */
+    /* Deploy Test Banner - ADDED MAY 21st */
+    .deploy-test-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #4CAF50;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      z-index: 10000;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    /* Improved image preview size */
     .nc-imageControl-imageWrapper {
       max-height: 300px;
       overflow: hidden;
@@ -104,11 +103,18 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+  <!-- DEPLOY TEST BANNER - MAY 21, 2024 -->
+  <div class="deploy-test-banner">🚀 DEPLOY TEST: MAY 21, 2024 - This banner confirms you're viewing the latest version</div>
+  
   <!-- Include the script that builds the page and powers Netlify CMS -->
   <script src="https://unpkg.com/netlify-cms@^2.10.192/dist/netlify-cms.js"></script>
   
   <!-- Initialize the CMS -->
   <script>
+    // Log versions and configuration for debugging
+    console.log('Netlify CMS Admin - May 21, 2024 Version');
+    console.log('Browser:', navigator.userAgent);
+    
     // Global error handling for CMS
     window.onerror = function(message, source, lineno, colno, error) {
       console.error('CMS Error:', message, error);
@@ -116,81 +122,117 @@
       return true;
     };
 
-    // Polyfill for Immutable.js methods to fix getIn errors
-    class SafeMap {
-      constructor(data) {
-        this.data = data || {};
-      }
+    // Direct override of the problematic Immutable.js methods
+    (function patchImmutableJS() {
+      console.log('Initializing admin with Immutable.js patches');
       
-      getIn(path, defaultValue) {
+      // Create a safer getIn implementation
+      function safeGetIn(obj, path, defaultValue) {
         try {
-          let current = this.data;
-          for (const key of path) {
+          if (!obj) return defaultValue;
+          
+          // Convert path to array if it's not already
+          const keys = Array.isArray(path) ? path : path.split('.');
+          let current = obj;
+          
+          for (const key of keys) {
             if (current === undefined || current === null) {
               return defaultValue;
             }
-            current = current[key];
+            
+            // Handle both object properties and Map/Record methods
+            if (typeof current.get === 'function') {
+              current = current.get(key);
+            } else {
+              current = current[key];
+            }
           }
+          
           return current === undefined ? defaultValue : current;
         } catch (e) {
-          console.error('Error in getIn:', e);
+          console.error('SafeGetIn Error:', e);
           return defaultValue;
         }
       }
       
-      toJS() {
-        return this.data;
-      }
-    }
-    
-    // Patch entry handling methods
-    window.fixImmutableIssue = function(entry) {
-      if (!entry || !entry.getIn) {
-        console.warn('Entry object missing getIn method, creating safe wrapper');
-        return new SafeMap(entry);
-      }
-      return entry;
-    };
-
-    // Fix Slug Formatter Issue
-    try {
-      // This patches the specific slug formatter function that's causing errors
-      const originalSlugFormatter = window.decodeURIComponent(
-        document.querySelector('script[src*="netlify-cms"]').src
-      ).match(/slugFormatter.*?\}/)[0];
-      
-      if (originalSlugFormatter) {
-        // Create a safer version that doesn't rely on Immutable.js
-        const safeSlugFormatter = function(collection, entry) {
-          try {
-            // Get fileName value either directly or via the polyfill
-            const fileName = entry.getIn ? entry.getIn(['data', 'fileName']) : 
-                           (entry.data && entry.data.fileName ? entry.data.fileName : '');
-            
-            // Return the fileName as the slug, or a timestamp if not available
-            return fileName ? fileName.toString() : new Date().getTime().toString();
-          } catch (error) {
-            console.error('Error in slug formatter:', error);
-            return new Date().getTime().toString(); // Fallback to timestamp
-          }
-        };
+      // Enhanced safe wrapper for Immutable objects
+      window.fixImmutableIssue = function(entry) {
+        // If entry is null or undefined, return a safe object
+        if (!entry) {
+          console.warn('Entry is null or undefined');
+          return {
+            getIn: (path, defaultValue) => defaultValue,
+            toJS: () => ({}),
+            data: {}
+          };
+        }
         
-        // Override the broken slugFormatter method in Netlify CMS
-        CMS.registerEventListener({
-          name: 'preSave',
-          handler: ({ entry }) => {
-            // Ensure the entry has a fileName before saving
-            const data = entry.toJS ? entry.toJS().data : (entry.data || {});
-            if (!data.fileName) {
-              return 'Please provide a fileName before saving';
+        // If entry already has getIn method, wrap it with our safe version
+        if (typeof entry.getIn === 'function') {
+          const originalGetIn = entry.getIn;
+          entry.getIn = function(path, defaultValue) {
+            try {
+              return originalGetIn.call(entry, path, defaultValue);
+            } catch (error) {
+              console.warn('Error in original getIn, using safe fallback', error);
+              return safeGetIn(entry.toJS ? entry.toJS() : entry, path, defaultValue);
             }
-            return true;
+          };
+          return entry;
+        }
+        
+        // If entry doesn't have getIn, create a wrapper object
+        console.warn('Entry missing getIn method, creating wrapper');
+        return {
+          original: entry,
+          getIn: function(path, defaultValue) {
+            return safeGetIn(entry, path, defaultValue);
+          },
+          toJS: function() {
+            return entry && typeof entry.toJS === 'function' ? entry.toJS() : 
+                  (typeof entry === 'object' ? entry : {});
+          },
+          data: entry.data || {}
+        };
+      };
+      
+      // Override slug handling - this is critical
+      window.createSlug = function(collection, entry) {
+        try {
+          console.log('Creating slug for entry', entry);
+          
+          // Explicitly extract fileName from entry data
+          let fileName = '';
+          
+          // Try multiple ways to get the fileName
+          try {
+            if (entry && entry.getIn) {
+              fileName = entry.getIn(['data', 'fileName'], '');
+            } else if (entry && entry.data) {
+              fileName = entry.data.fileName || '';
+            } else if (entry && entry.toJS) {
+              const data = entry.toJS();
+              fileName = data.data ? data.data.fileName : '';
+            }
+          } catch (err) {
+            console.error('Error accessing entry data', err);
           }
-        });
-      }
-    } catch (error) {
-      console.error('Failed to patch slug formatter:', error);
-    }
+          
+          // Log and return the slug
+          console.log('Generated slug from fileName:', fileName);
+          
+          if (!fileName || fileName.trim() === '') {
+            console.warn('No fileName found, using timestamp');
+            return 'project-' + new Date().getTime().toString();
+          }
+          
+          return String(fileName).trim();
+        } catch (error) {
+          console.error('Slug creation error:', error);
+          return 'error-slug-' + new Date().getTime().toString();
+        }
+      };
+    })();
 
     // Initialize Netlify CMS with error handling
     try {
@@ -209,7 +251,8 @@
         
         let data;
         try {
-          data = entry.getIn(['data'], {}).toJS();
+          data = entry.getIn(['data'], {});
+          data = typeof data.toJS === 'function' ? data.toJS() : data;
           console.log('Preview data:', data);
         } catch (error) {
           console.error('Error getting entry data:', error);
@@ -300,66 +343,101 @@
         }
       });
 
-      // Configure the CMS interface
-      CMS.registerEventListener({
+      // Add Netlify CMS hooks for validation and slug customization 
+      window.CMS.registerEventListener({
         name: 'preSave',
         handler: ({ entry }) => {
-          // Use our wrapper to handle potential Immutable.js errors
+          console.log('Handling preSave event', entry);
+          
+          // Apply our Immutable fix
           entry = window.fixImmutableIssue(entry);
           
-          let data;
           try {
-            data = entry.getIn(['data'], {}).toJS();
-            console.log('Saving entry data:', data);
+            // Get and log entry data safely
+            const data = entry.getIn(['data'], {});
+            const jsData = typeof data.toJS === 'function' ? data.toJS() : data;
+            console.log('Saving entry data:', jsData);
+            
+            // Validate required fields
+            if (!jsData.fileName) {
+              return 'File Name is required. Please provide a tab name.';
+            }
+            
+            if (jsData.type === 'written' && !jsData.authorNames) {
+              return 'Written projects require author names. Please add at least one author.';
+            }
+            
+            if (jsData.type === 'computational' && !jsData.repoLink) {
+              return 'Computational projects require a repository link. Please add a valid repository URL.';
+            }
+            
+            return true; // Allow the save to proceed
           } catch (error) {
-            console.error('Error getting entry data in preSave:', error);
+            console.error('Error handling preSave:', error);
             return 'Error processing form data. Please try again.';
           }
-          
-          // Automatically ensure required fields are present based on project type
-          if (data.type === 'written' && !data.authorNames) {
-            return 'Written projects require author names. Please add at least one author.';
-          }
-          if (data.type === 'computational' && !data.repoLink) {
-            return 'Computational projects require a repository link. Please add a valid repository URL.';
-          }
-          
-          return true; // Allow the save to proceed
         },
       });
 
       // Add helpful information to the CMS interface
       document.addEventListener('DOMContentLoaded', function() {
-        // Wait for CMS to initialize
+        // Insert a helpful note about the current configuration
         setTimeout(() => {
-          const header = document.querySelector('.nc-appHeader-content');
-          if (header) {
-            const infoButton = document.createElement('button');
-            infoButton.className = 'nc-button';
-            infoButton.innerHTML = 'Help';
-            infoButton.style.marginLeft = '10px';
-            infoButton.addEventListener('click', () => {
-              alert('Project Management Tips:\n\n• Changes made here are saved to your Git repository\n• To see changes on your site, you must publish them\n• IDs are managed automatically by the application\n• Projects can be reordered in the admin interface\n• Sync your local environment with the CMS using the "Sync with CMS" button');
-            });
-            header.appendChild(infoButton);
+          try {
+            const content = document.querySelector('.nc-app-main .nc-app-content');
+            if (content) {
+              const infoBox = document.createElement('div');
+              infoBox.style.margin = '10px 20px';
+              infoBox.style.padding = '10px';
+              infoBox.style.background = '#E8F5E9';
+              infoBox.style.borderRadius = '4px';
+              infoBox.innerHTML = `
+                <h3 style="margin-top: 0;">Project Management Details</h3>
+                <p><strong>Projects are saved to:</strong> src/_projects/[filename].json</p>
+                <p><strong>Images are saved to:</strong> public/projects/images/</p>
+                <p><strong>File Name field</strong> is used to generate both the JSON filename and the folder tab label.</p>
+                <p><strong>Deploy version:</strong> May 21, 2024 - Enhanced slug handling</p>
+              `;
+              
+              // Insert at the beginning of the content
+              if (content.firstChild) {
+                content.insertBefore(infoBox, content.firstChild);
+              } else {
+                content.appendChild(infoBox);
+              }
+            }
+            
+            const header = document.querySelector('.nc-appHeader-content');
+            if (header) {
+              const infoButton = document.createElement('button');
+              infoButton.className = 'nc-button';
+              infoButton.innerHTML = 'Help';
+              infoButton.style.marginLeft = '10px';
+              infoButton.addEventListener('click', () => {
+                alert('Project Management Tips:\n\n• Changes made here are saved to your Git repository\n• To see changes on your site, you must publish them\n• File Name field is used for the folder tab display\n• Projects can be reordered in the admin interface\n• Check the console (F12) for additional error information if issues occur');
+              });
+              header.appendChild(infoButton);
+              
+              // Add debugging info button
+              const debugButton = document.createElement('button');
+              debugButton.className = 'nc-button';
+              debugButton.innerHTML = 'Debug Info';
+              debugButton.style.marginLeft = '10px';
+              debugButton.style.background = '#FF9800';
+              debugButton.addEventListener('click', () => {
+                console.log('CMS Config:', CMS.getConfig());
+                alert('Debug information has been output to the browser console.\nPress F12 to view.');
+              });
+              header.appendChild(debugButton);
+            }
+          } catch (e) {
+            console.error('Error adding help elements:', e);
           }
         }, 1000);
       });
     } catch (error) {
       console.error('CMS initialization error:', error);
       alert('Failed to initialize CMS: ' + error.message);
-    }
-    
-    if (window.netlifyIdentity) {
-      window.netlifyIdentity.on("init", user => {
-        if (!user) {
-          window.netlifyIdentity.on("login", () => {
-            document.location.href = "/admin/";
-          });
-        } else {
-          console.log("User is already logged in");
-        }
-      });
     }
   </script>
 </body>
