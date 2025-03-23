@@ -33,8 +33,8 @@ collections:
     format: "json"
     extension: "json"
     delete: true
-    # Simplify to use the default slug generation
-    slug: "{{year}}-{{month}}-{{day}}-{{hour}}-{{minute}}-{{second}}"
+    # Use a simpler slug format based on timestamp to avoid immutable errors
+    slug: "{{year}}{{month}}{{day}}{{hour}}{{minute}}{{second}}"
     identifier_field: "fileName"
     summary: "{{fileName}} - {{projectTitle}} ({{type}})"
     sortable_fields: ['fileName', 'projectTitle', 'type', 'category']

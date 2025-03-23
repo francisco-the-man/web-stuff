@@ -159,6 +159,28 @@
           };
         }
         
+        // Add get method if missing (needed for some operations)
+        if (typeof obj.get !== 'function') {
+          obj.get = function(key, defaultValue) {
+            return this[key] === undefined ? defaultValue : this[key];
+          };
+        }
+        
+        // Add set method if missing
+        if (typeof obj.set !== 'function') {
+          obj.set = function(key, value) {
+            this[key] = value;
+            return this;
+          };
+        }
+        
+        // Add has method if missing
+        if (typeof obj.has !== 'function') {
+          obj.has = function(key) {
+            return this[key] !== undefined;
+          };
+        }
+        
         return obj;
       };
       
@@ -168,8 +190,8 @@
         const errorMsg = args.join(' ');
         
         // Check for specific error message
-        if (errorMsg.includes('getIn is not a function')) {
-          // Try to recover by finding the 't' object in the arguments
+        if (errorMsg.includes('getIn is not a function') || errorMsg.includes('is not a function')) {
+          // Try to recover by finding objects in the arguments
           for (let i = 0; i < args.length; i++) {
             if (args[i] && typeof args[i] === 'object') {
               monkeyPatchMethods(args[i]);
@@ -184,12 +206,23 @@
       // Global error catcher specifically for getIn errors
       window.addEventListener('unhandledrejection', function(event) {
         if (event.reason && event.reason.message && 
-            event.reason.message.includes('getIn is not a function')) {
-          console.warn('Caught unhandled rejection with getIn error, patching object');
+            (event.reason.message.includes('getIn is not a function') || 
+             event.reason.message.includes('is not a function'))) {
+          console.warn('Caught unhandled rejection with function error, patching object');
           
           // Stop propagation and prevent default
           event.stopImmediatePropagation();
           event.preventDefault();
+          
+          // Try to recover by patching global CMS objects
+          try {
+            if (window.CMS && window.CMS.getStore) {
+              const store = window.CMS.getStore();
+              if (store) monkeyPatchMethods(store);
+            }
+          } catch (e) {
+            console.error('Failed to patch CMS store:', e);
+          }
           
           // Try to recover
           setTimeout(function() {
@@ -209,6 +242,50 @@
         }
       });
       
+      // Patch the CMS slug functionality specifically
+      const patchSlugFormatter = function() {
+        // Only patch if CMS is available
+        if (!window.CMS || !window.CMS.getStore) return;
+        
+        try {
+          // Try to get the config
+          const store = window.CMS.getStore();
+          if (!store) return;
+          
+          // Find the slug formatter and patch it
+          const collectionsRaw = store.collections;
+          if (collectionsRaw) {
+            // Either it's an immutable map or a plain object
+            const collections = typeof collectionsRaw.toJS === 'function' ? 
+              collectionsRaw.toJS() : collectionsRaw;
+              
+            // Patch each collection's slug formatter
+            Object.values(collections).forEach(collection => {
+              // Ensure the collection has a slug formatter
+              if (collection && collection.slugFormatter) {
+                const originalSlugFormatter = collection.slugFormatter;
+                
+                // Replace with a safer version that handles errors
+                collection.slugFormatter = function(entry) {
+                  try {
+                    // Apply our patch to the entry
+                    entry = monkeyPatchMethods(entry);
+                    return originalSlugFormatter(entry);
+                  } catch (error) {
+                    console.warn('Error in slugFormatter, using fallback:', error);
+                    // Fallback to timestamp slug
+                    const now = new Date();
+                    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}`;
+                  }
+                };
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Failed to patch slug formatter:', error);
+        }
+      };
+      
       // Global method to fix Immutable objects
       window.fixImmutableIssue = function(entry) {
         if (!entry) return { 
@@ -219,16 +296,76 @@
         
         return monkeyPatchMethods(entry);
       };
+      
+      // Apply patches when CMS is initialized
+      const patchCmsObjects = function() {
+        // Patch slug formatter
+        patchSlugFormatter();
+        
+        // Patch all entry objects
+        if (window.CMS && window.CMS.getStore) {
+          try {
+            const store = window.CMS.getStore();
+            if (store && store.getState) {
+              const state = store.getState();
+              if (state && state.entries && state.entries.entities) {
+                Object.values(state.entries.entities).forEach(entry => {
+                  window.fixImmutableIssue(entry);
+                });
+              }
+            }
+          } catch (e) {
+            console.error('Failed to patch CMS entries:', e);
+          }
+        }
+      };
+      
+      // Run the patching after CMS initialization
+      document.addEventListener('DOMContentLoaded', function() {
+        // Initial delay to ensure CMS is initialized
+        setTimeout(patchCmsObjects, 1000);
+        
+        // Patch periodically to catch new objects
+        setInterval(patchCmsObjects, 5000);
+      });
     })();
 
     // Initialize Netlify CMS with error handling
     try {
+      // Override global getIn/toJS methods temporarily
+      if (!Object.prototype.hasOwnProperty('getIn')) {
+        Object.prototype.getIn = function(path, defaultValue) {
+          let current = this;
+          for (const key of path) {
+            if (current === undefined || current === null) return defaultValue;
+            current = current[key];
+          }
+          return current === undefined ? defaultValue : current;
+        };
+      }
+      
+      if (!Object.prototype.hasOwnProperty('toJS')) {
+        Object.prototype.toJS = function() {
+          return JSON.parse(JSON.stringify(this));
+        };
+      }
+      
       // Configure the CMS before init
       CMS.init({
         config: {
           load_config_file: true
         }
       });
+      
+      // Remove the temporary prototype methods to avoid polluting other code
+      if (Object.prototype.hasOwnProperty('getIn')) {
+        delete Object.prototype.getIn;
+      }
+      
+      if (Object.prototype.hasOwnProperty('toJS')) {
+        delete Object.prototype.toJS;
+      }
+      
       console.log('CMS initialized successfully');
       
       // Register a custom preview template for projects
@@ -264,62 +401,284 @@
             `;
           }
           
-          // Preview the project data with improved styling
+          // Get position class for folder
+          const positionClass = data.position || 'middle';
+          
+          // Preview the project data with improved styling - FOLDER VISUALIZATION
           return `
             <div class="project-preview-container">
               <div class="project-preview-header">
-                <h1 style="margin-top: 0; color: #333;">${data.projectTitle || 'Untitled Project'}</h1>
+                <h1 style="margin-top: 0; color: #333;">Project Preview</h1>
                 <p style="color: #666; margin-bottom: 0;">
-                  <strong>Tab Label:</strong> ${data.fileName || 'Unnamed Tab'}
+                  This is how your project will appear in the ${data.category || 'computer'} section.
                 </p>
               </div>
               
-              <!-- Project Folder Preview -->
-              <div style="position: relative; width: 100%; margin: 30px 0; border: 1px solid #eee; border-radius: 8px; padding: 20px; background: #f9f9f9;">
-                <div style="position: absolute; top: -15px; left: 40px; background: #fff; padding: 5px 15px; border: 1px solid #ddd; border-radius: 20px; font-size: 14px;">
-                  ${data.fileName || 'Unnamed Tab'}
+              <!-- Desktop visualization -->
+              <div style="margin: 40px 0; background: #f5f5f5; border-radius: 8px; padding: 30px; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 30px; background: #333; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                  <div style="display: flex; padding: 8px 12px;">
+                    <span style="height: 12px; width: 12px; border-radius: 50%; background: #ff5f57; margin-right: 6px;"></span>
+                    <span style="height: 12px; width: 12px; border-radius: 50%; background: #febc2e; margin-right: 6px;"></span>
+                    <span style="height: 12px; width: 12px; border-radius: 50%; background: #28c840;"></span>
+                  </div>
                 </div>
                 
-                <div style="text-align: center; margin-top: 10px;">
-                  <h3 style="text-transform: uppercase; font-weight: bold; margin-bottom: 15px;">${data.projectTitle || 'Untitled Project'}</h3>
-                  
-                  <div style="width: 80%; margin: 0 auto 15px auto;">
-                    ${data.projectImg ? 
-                      `<img src="${data.projectImg}" alt="${data.projectTitle}" style="width: 100%; height: 140px; object-fit: cover; border: 1px solid #ddd;" />` : 
-                      '<div style="width: 100%; height: 140px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd;"><span>No Image Selected</span></div>'
-                    }
-                  </div>
-                  
-                  <p style="font-size: 14px; margin-bottom: 20px; min-height: 60px; line-height: 1.5;">
-                    ${data.description || 'No description provided.'}
-                  </p>
-                  
-                  <div style="margin-top: auto; text-align: center; padding-top: 10px; border-top: 1px solid #eee;">
-                    ${data.type === 'written' ? 
-                      `<p style="font-style: italic; font-size: 12px;">written by: ${data.authorNames || 'unknown'}</p>` : 
-                      `<p style="font-size: 12px;"><span style="display: inline-block; vertical-align: middle; margin-right: 5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12C2 16.418 4.865 20.166 8.84 21.489C9.34 21.579 9.52 21.273 9.52 21.012C9.52 20.775 9.512 20.136 9.508 19.3C6.726 19.91 6.14 17.861 6.14 17.861C5.684 16.726 5.029 16.421 5.029 16.421C4.121 15.765 5.098 15.777 5.098 15.777C6.101 15.849 6.63 16.844 6.63 16.844C7.521 18.327 8.97 17.908 9.54 17.657C9.628 17.05 9.883 16.632 10.16 16.419C7.93 16.202 5.582 15.353 5.582 11.613C5.582 10.52 6.002 9.628 6.65 8.933C6.55 8.684 6.178 7.658 6.75 6.337C6.75 6.337 7.587 6.073 9.496 7.431C10.295 7.211 11.152 7.102 12 7.098C12.848 7.102 13.705 7.211 14.504 7.431C16.413 6.073 17.25 6.337 17.25 6.337C17.822 7.658 17.45 8.684 17.35 8.933C17.998 9.628 18.418 10.52 18.418 11.613C18.418 15.363 16.068 16.2 13.836 16.413C14.185 16.685 14.512 17.227 14.512 18.043C14.512 19.207 14.499 20.684 14.499 21.012C14.499 21.275 14.677 21.584 15.186 21.487C19.158 20.16 22 16.416 22 12C22 6.477 17.523 2 12 2Z"></path></svg></span> <a href="${data.repoLink || '#'}" style="color: #3982F7; text-decoration: underline;">code</a></p>`
-                    }
+                <div style="margin-top: 20px; display: flex; flex-wrap: nowrap; justify-content: ${positionClass === 'left' ? 'flex-start' : positionClass === 'right' ? 'flex-end' : 'center'};">
+                  <!-- Project Folder -->
+                  <div style="
+                    position: relative; 
+                    width: 280px; 
+                    margin: 10px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                    transition: transform 0.3s;
+                  ">
+                    <!-- Folder Tab -->
+                    <div style="
+                      position: absolute;
+                      top: -25px;
+                      left: 20px;
+                      right: 20px;
+                      height: 25px;
+                      background: #e0e0e0;
+                      border-top-left-radius: 8px;
+                      border-top-right-radius: 8px;
+                      border: 1px solid #ccc;
+                      border-bottom: none;
+                      display: flex;
+                      justify-content: center;
+                      align-items: center;
+                      padding: 0 15px;
+                      font-size: 14px;
+                      font-weight: 500;
+                      box-shadow: 0 -2px 3px rgba(0,0,0,0.05);
+                      overflow: hidden;
+                      white-space: nowrap;
+                      text-overflow: ellipsis;
+                      color: #333;
+                    ">
+                      ${data.fileName || 'Unnamed Tab'}
+                    </div>
+                    
+                    <!-- Folder Body -->
+                    <div style="
+                      background: #f9f9f9;
+                      border: 1px solid #ccc;
+                      border-radius: 3px;
+                      overflow: hidden;
+                    ">
+                      <!-- Folder Content -->
+                      <div style="padding: 20px; text-align: center;">
+                        <h3 style="
+                          text-transform: uppercase;
+                          font-size: 16px;
+                          margin-bottom: 12px;
+                          font-weight: bold;
+                          letter-spacing: 0.5px;
+                        ">${data.projectTitle || 'Untitled Project'}</h3>
+                        
+                        <div style="
+                          width: 100%;
+                          height: 150px;
+                          margin-bottom: 15px;
+                          border: 1px solid #ddd;
+                          background-color: #eee;
+                          overflow: hidden;
+                        ">
+                          ${data.projectImg ? 
+                            `<img src="${data.projectImg}" alt="${data.projectTitle}" style="width: 100%; height: 100%; object-fit: cover;" />` : 
+                            '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"><span style="color: #999;">No Image</span></div>'
+                          }
+                        </div>
+                        
+                        <p style="
+                          font-size: 14px;
+                          color: #555;
+                          line-height: 1.4;
+                          height: 60px;
+                          overflow: hidden;
+                          display: -webkit-box;
+                          -webkit-line-clamp: 3;
+                          -webkit-box-orient: vertical;
+                          margin-bottom: 15px;
+                        ">${data.description || 'No description provided.'}</p>
+                        
+                        <div style="
+                          border-top: 1px solid #eee;
+                          padding-top: 12px;
+                          text-align: center;
+                          font-size: 12px;
+                          color: #777;
+                        ">
+                          ${data.type === 'written' ? 
+                            `<p style="font-style: italic;">written by: ${data.authorNames || 'unknown'}</p>` : 
+                            `<p><span style="display: inline-block; vertical-align: middle; margin-right: 5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12C2 16.418 4.865 20.166 8.84 21.489C9.34 21.579 9.52 21.273 9.52 21.012C9.52 20.775 9.512 20.136 9.508 19.3C6.726 19.91 6.14 17.861 6.14 17.861C5.684 16.726 5.029 16.421 5.029 16.421C4.121 15.765 5.098 15.777 5.098 15.777C6.101 15.849 6.63 16.844 6.63 16.844C7.521 18.327 8.97 17.908 9.54 17.657C9.628 17.05 9.883 16.632 10.16 16.419C7.93 16.202 5.582 15.353 5.582 11.613C5.582 10.52 6.002 9.628 6.65 8.933C6.55 8.684 6.178 7.658 6.75 6.337C6.75 6.337 7.587 6.073 9.496 7.431C10.295 7.211 11.152 7.102 12 7.098C12.848 7.102 13.705 7.211 14.504 7.431C16.413 6.073 17.25 6.337 17.25 6.337C17.822 7.658 17.45 8.684 17.35 8.933C17.998 9.628 18.418 10.52 18.418 11.613C18.418 15.363 16.068 16.2 13.836 16.413C14.185 16.685 14.512 17.227 14.512 18.043C14.512 19.207 14.499 20.684 14.499 21.012C14.499 21.275 14.677 21.584 15.186 21.487C19.158 20.16 22 16.416 22 12C22 6.477 17.523 2 12 2Z"></path></svg></span> <a href="${data.repoLink || '#'}" style="color: #3982F7; text-decoration: underline;">code</a></p>`
+                          }
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
               
-              <!-- Project Field Details -->
-              <div class="project-preview-meta">
-                <div>
-                  <strong>Type:</strong> ${data.type || 'Not specified'}<br>
-                  <strong>Category:</strong> ${data.category || 'Not specified'}<br>
-                  <strong>Position:</strong> ${data.position || 'Not specified'}
+              <!-- Mobile visualization -->
+              <div style="margin: 30px 0; background: #f5f5f5; border-radius: 8px; padding: 25px 15px; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 25px; background: #333; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                  <div style="position: absolute; top: 7px; left: 50%; transform: translateX(-50%); width: 40%; height: 4px; background: #555; border-radius: 2px;"></div>
                 </div>
-                <div>
-                  ${data.authorNames ? `<strong>Authors:</strong> ${data.authorNames}<br>` : ''}
-                  ${data.repoLink ? `<strong>Repository:</strong> <a href="${data.repoLink}" target="_blank">${data.repoLink}</a><br>` : ''}
+                
+                <p style="text-align: center; font-size: 12px; color: #777; margin-bottom: 10px; margin-top: 5px;">Mobile View</p>
+                
+                <div style="
+                  max-width: 300px; 
+                  margin: 0 auto;
+                  display: flex; 
+                  justify-content: center;
+                ">
+                  <!-- Project Folder -->
+                  <div style="
+                    position: relative; 
+                    width: 220px; 
+                    margin: 10px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                  ">
+                    <!-- Folder Tab -->
+                    <div style="
+                      position: absolute;
+                      top: -20px;
+                      left: 15px;
+                      right: 15px;
+                      height: 20px;
+                      background: #e0e0e0;
+                      border-top-left-radius: 5px;
+                      border-top-right-radius: 5px;
+                      border: 1px solid #ccc;
+                      border-bottom: none;
+                      display: flex;
+                      justify-content: center;
+                      align-items: center;
+                      padding: 0 10px;
+                      font-size: 12px;
+                      box-shadow: 0 -2px 3px rgba(0,0,0,0.05);
+                      overflow: hidden;
+                      white-space: nowrap;
+                      text-overflow: ellipsis;
+                      color: #333;
+                    ">
+                      ${data.fileName || 'Unnamed Tab'}
+                    </div>
+                    
+                    <!-- Folder Body -->
+                    <div style="
+                      background: #f9f9f9;
+                      border: 1px solid #ccc;
+                      border-radius: 3px;
+                      overflow: hidden;
+                    ">
+                      <!-- Folder Content -->
+                      <div style="padding: 15px; text-align: center;">
+                        <h3 style="
+                          text-transform: uppercase;
+                          font-size: 14px;
+                          margin-bottom: 10px;
+                          font-weight: bold;
+                        ">${data.projectTitle || 'Untitled Project'}</h3>
+                        
+                        <div style="
+                          width: 100%;
+                          height: 120px;
+                          margin-bottom: 12px;
+                          border: 1px solid #ddd;
+                          background-color: #eee;
+                          overflow: hidden;
+                        ">
+                          ${data.projectImg ? 
+                            `<img src="${data.projectImg}" alt="${data.projectTitle}" style="width: 100%; height: 100%; object-fit: cover;" />` : 
+                            '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"><span style="color: #999; font-size: 12px;">No Image</span></div>'
+                          }
+                        </div>
+                        
+                        <p style="
+                          font-size: 12px;
+                          color: #555;
+                          line-height: 1.3;
+                          height: 45px;
+                          overflow: hidden;
+                          display: -webkit-box;
+                          -webkit-line-clamp: 3;
+                          -webkit-box-orient: vertical;
+                          margin-bottom: 10px;
+                        ">${data.description || 'No description provided.'}</p>
+                        
+                        <div style="
+                          border-top: 1px solid #eee;
+                          padding-top: 8px;
+                          text-align: center;
+                          font-size: 11px;
+                          color: #777;
+                        ">
+                          ${data.type === 'written' ? 
+                            `<p style="font-style: italic;">written by: ${data.authorNames || 'unknown'}</p>` : 
+                            `<p><span style="display: inline-block; vertical-align: middle; margin-right: 3px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12C2 16.418 4.865 20.166 8.84 21.489C9.34 21.579 9.52 21.273 9.52 21.012C9.52 20.775 9.512 20.136 9.508 19.3C6.726 19.91 6.14 17.861 6.14 17.861C5.684 16.726 5.029 16.421 5.029 16.421C4.121 15.765 5.098 15.777 5.098 15.777C6.101 15.849 6.63 16.844 6.63 16.844C7.521 18.327 8.97 17.908 9.54 17.657C9.628 17.05 9.883 16.632 10.16 16.419C7.93 16.202 5.582 15.353 5.582 11.613C5.582 10.52 6.002 9.628 6.65 8.933C6.55 8.684 6.178 7.658 6.75 6.337C6.75 6.337 7.587 6.073 9.496 7.431C10.295 7.211 11.152 7.102 12 7.098C12.848 7.102 13.705 7.211 14.504 7.431C16.413 6.073 17.25 6.337 17.25 6.337C17.822 7.658 17.45 8.684 17.35 8.933C17.998 9.628 18.418 10.52 18.418 11.613C18.418 15.363 16.068 16.2 13.836 16.413C14.185 16.685 14.512 17.227 14.512 18.043C14.512 19.207 14.499 20.684 14.499 21.012C14.499 21.275 14.677 21.584 15.186 21.487C19.158 20.16 22 16.416 22 12C22 6.477 17.523 2 12 2Z"></path></svg></span> <a href="${data.repoLink || '#'}" style="color: #3982F7; text-decoration: underline;">code</a></p>`
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               
-              <div style="margin-top: 15px; padding: 10px; background: #E8F5E9; border-radius: 4px; font-size: 0.9em;">
+              <!-- Form field details -->
+              <div class="project-preview-meta" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                <h3 style="margin-bottom: 15px; font-size: 16px;">Project Details</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tbody>
+                    <tr>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee; width: 30%; font-weight: bold;">File Name:</td>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee;">${data.fileName || 'Not specified'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Project Title:</td>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee;">${data.projectTitle || 'Not specified'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Type:</td>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee;">${data.type || 'Not specified'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Category:</td>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee;">${data.category || 'Not specified'}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Position:</td>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee;">${data.position || 'Not specified'}</td>
+                    </tr>
+                    ${data.type === 'written' ? `
+                    <tr>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Authors:</td>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee;">${data.authorNames || 'Not specified'}</td>
+                    </tr>
+                    ` : `
+                    <tr>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Repository Link:</td>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                        ${data.repoLink ? `<a href="${data.repoLink}" target="_blank" style="color: #3982F7;">${data.repoLink}</a>` : 'Not specified'}
+                      </td>
+                    </tr>
+                    `}
+                    <tr>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Description:</td>
+                      <td style="padding: 8px; border-bottom: 1px solid #eee;">${data.description || 'Not specified'}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <div style="margin-top: 20px; padding: 15px; background: #E8F5E9; border-radius: 4px; font-size: 0.9em;">
                 <p style="margin: 0; color: #2E7D32;">
                   <strong>Preview Note:</strong> This project will appear in a folder styled interface on the 
                   ${data.category === 'both' ? 'Computer and Research' : data.category} page.
+                  The folder position will be ${data.position || 'middle'} aligned.
                 </p>
               </div>
             </div>
@@ -465,27 +824,6 @@
           }
         }, 1000);
       });
-      
-      // Attempt to patch any existing objects in the CMS at regular intervals
-      setInterval(function() {
-        try {
-          // Find all forms in the DOM
-          const forms = document.querySelectorAll('form');
-          forms.forEach(form => {
-            // Find all input elements
-            const inputs = form.querySelectorAll('input, textarea, select');
-            inputs.forEach(input => {
-              // Check if the input has an associated CMS widget
-              const widget = input.closest('[class*="widget-"]');
-              if (widget && widget.__cms_widget) {
-                window.fixImmutableIssue(widget.__cms_widget);
-              }
-            });
-          });
-        } catch (e) {
-          // Silently fail, this is just a precaution
-        }
-      }, 2000);
     } catch (error) {
       console.error('CMS initialization error:', error);
       alert('Failed to initialize CMS: ' + error.message);
