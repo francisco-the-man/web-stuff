@@ -1,9 +1,7 @@
 backend:
-  name: github
+  name: git-gateway
   repo: francisco-the-man/web-stuff
   branch: main
-  base_url: https://api.netlify.com
-  auth_endpoint: auth
   commit_messages:
     create: 'Create project "{{slug}}"'
     update: 'Update project "{{slug}}"'
