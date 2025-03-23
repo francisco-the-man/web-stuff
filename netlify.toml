@@ -1,7 +1,10 @@
 [build]
   base = "."
-  command = "npm install --force && npm run build"
+  command = "npm install && npm run build"
   publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "18"
 
 # Redirect all routes to index.html for single-page application
 [[redirects]]

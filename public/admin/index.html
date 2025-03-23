@@ -96,8 +96,8 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Include the script that builds the page and powers Netlify CMS -->
-  <script src="https://unpkg.com/netlify-cms@^2.10.192/dist/netlify-cms.js"></script>
+  <!-- Include the script that builds the page and powers Decap CMS -->
+  <script src="https://unpkg.com/decap-cms@^3.1.3/dist/decap-cms.js"></script>
   
   <!-- Initialize the CMS -->
   <script>
@@ -330,7 +330,7 @@
       });
     })();
 
-    // Initialize Netlify CMS with error handling
+    // Initialize Decap CMS with error handling
     try {
       // Override global getIn/toJS methods temporarily
       if (!Object.prototype.hasOwnProperty('getIn')) {
