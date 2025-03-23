@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import EncircleButton from './EncircleButton';
 import { CSSProperties } from 'react';
 // Import SVG assets
@@ -55,16 +55,40 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
 }) => {
   const [imageError, setImageError] = useState<string | null>(null);
   
+  // Log the incoming image URL for debugging
+  useEffect(() => {
+    console.log(`ProjectFolder ${fileName} received image URL:`, projectImg);
+  }, [fileName, projectImg]);
+  
   // Check if the image URL is valid and return a potentially modified URL
   const getImageUrl = (url: string): string => {
     if (!url || url === "" || url.includes("undefined") || url.includes("null")) {
       // Invalid URL, don't attempt to process it
+      console.warn(`ProjectFolder ${fileName}: Invalid image URL`, url);
       return "";
     }
     
     // If it's a relative URL, make it absolute
     if (url.startsWith('/')) {
-      return `${window.location.origin}${url}`;
+      const absoluteUrl = `${window.location.origin}${url}`;
+      console.log(`ProjectFolder ${fileName}: Converting relative URL to absolute:`, absoluteUrl);
+      return absoluteUrl;
+    }
+    
+    // Handle GitHub URLs specifically
+    if (url.includes('github.io') || url.includes('githubusercontent.com')) {
+      console.log(`ProjectFolder ${fileName}: Detected GitHub URL:`, url);
+      
+      // Add any special handling for GitHub URLs if needed
+      // For example, if you encounter CORS issues:
+      /*
+      const corsProxyUrl = `https://cors-anywhere.herokuapp.com/${url}`;
+      console.log(`Adding CORS proxy to GitHub URL: ${corsProxyUrl}`);
+      return corsProxyUrl;
+      */
+      
+      // For now, just use the URL directly
+      return url;
     }
     
     // Add CORS proxy for GitHub Pages URLs if needed
@@ -76,6 +100,7 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
     }
     */
     
+    console.log(`ProjectFolder ${fileName}: Using original URL:`, url);
     return url;
   };
 

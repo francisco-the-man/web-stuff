@@ -109,12 +109,26 @@ const mapNotionPageToProject = (page: any, index: number): ProjectData => {
     // Get project image URL
     const projectImgUrl = getValue('ProjectImage', 'files', '/vite.svg');
     
+    // Also try to get URL from URL property as a fallback
+    let finalImgUrl = projectImgUrl;
+    // If we got the default value, try looking for a URL property
+    if (projectImgUrl === '/vite.svg') {
+      // Try to get from a URL property (in case it's stored that way in Notion)
+      const urlProperty = properties['ProjectImage'];
+      if (urlProperty && urlProperty.url) {
+        console.log(`Project ${index + 1}: Found direct URL property for image:`, urlProperty.url);
+        finalImgUrl = urlProperty.url;
+      } else if (urlProperty && urlProperty.type === 'url') {
+        console.log(`Project ${index + 1}: Found URL type for ProjectImage but no URL value`);
+      }
+    }
+    
     // Log out image URL source for debugging
-    if (projectImgUrl !== '/vite.svg') {
-      const isGitHubUrl = projectImgUrl.includes('github.io') || 
-                          projectImgUrl.includes('githubusercontent.com');
+    if (finalImgUrl !== '/vite.svg') {
+      const isGitHubUrl = finalImgUrl.includes('github.io') || 
+                          finalImgUrl.includes('githubusercontent.com');
       console.log(`Project ${index + 1} using ${isGitHubUrl ? 'GitHub' : 'Notion'} hosted image: ${
-        projectImgUrl.substring(0, 50)}...`);
+        finalImgUrl.substring(0, 50)}...`);
     }
     
     // Build the project data object
@@ -123,7 +137,7 @@ const mapNotionPageToProject = (page: any, index: number): ProjectData => {
       fileName: getValue('Name', 'title', `Project ${index + 1}`),
       projectTitle: getValue('ProjectTitle', 'rich_text', `Untitled Project ${index + 1}`),
       description: getValue('Description', 'rich_text', 'No description provided'),
-      projectImg: projectImgUrl,
+      projectImg: finalImgUrl,
       type: getValue('Type', 'select', 'computational') as ProjectType,
       position: position, // Automatically assigned based on index
       category: determineCategory(), // Using our new function

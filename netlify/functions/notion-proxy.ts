@@ -105,6 +105,22 @@ export const handler: Handler = async (event) => {
 
     console.log(`Found ${response.results.length} projects in Notion database`);
     
+    // Log the first result to see what properties look like
+    if (response.results.length > 0) {
+      console.log('First project properties sample:');
+      const firstProject = response.results[0];
+      
+      // Check if the ProjectImage property exists
+      // @ts-ignore - TypeScript doesn't know the correct Notion types here
+      if (firstProject.properties && firstProject.properties.ProjectImage) {
+        console.log('ProjectImage property:');
+        // @ts-ignore - TypeScript doesn't know the correct Notion types here
+        console.log(JSON.stringify(firstProject.properties.ProjectImage, null, 2));
+      } else {
+        console.log('No ProjectImage property found in the first project');
+      }
+    }
+    
     return {
       statusCode: 200,
       headers,
