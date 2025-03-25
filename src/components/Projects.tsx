@@ -27,7 +27,7 @@ const Projects = () => {
   return (
     <main className="py-6 px-4 flex flex-col min-h-screen">
       <div className="container mx-auto max-w-4xl flex-grow">
-        <div className="flex flex-col">
+        <div className="flex flex-col relative">
           {/* Page Title and Back Button */}
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-2xl">Projects</h1>
@@ -41,16 +41,16 @@ const Projects = () => {
             </div>
           </div>
           
-          <div className="relative h-[120px] md:h-[120px] flex items-center justify-center mb-0">
-            {/* Loading indicator */}
+          <div className="relative h-[120px] md:h-[120px] flex items-center justify-center mb-0 z-40">
+            {/* Loading indic */}
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 z-50">
                 <div className="animate-spin text-3xl">⟳</div>
               </div>
             )}
           
-            {/* Stacked projects with improved mobile scaling - adjust positioning */}
-            <div className="relative w-full max-w-[280px] md:max-w-xl mx-auto transform scale-75 md:scale-100">
+            {/* Stacked projects */}
+            <div className="relative w-full max-w-[300px] md:max-w-xl mx-auto transform scale-80 md:scale-100">
               {filteredProjects.length === 0 && !isLoading ? (
                 <div className="text-center p-6 border border-gray-300 rounded">
                   <p>No projects found. Try refreshing or add projects in the admin interface.</p>
@@ -78,19 +78,19 @@ const Projects = () => {
                   } else if (relativeIndex === 1) {
                     // First item behind
                     zIndex = 19;
-                    offsetY = -15;
+                    offsetY = -12;
                     scale = 0.95;
                     opacity = 0.9;
                   } else if (relativeIndex === 2) {
                     // Second item behind
                     zIndex = 18;
-                    offsetY = -30;
+                    offsetY = -24;
                     scale = 0.9;
                     opacity = 0.8;
                   } else {
                     // All items further back (only show if it's the last one)
                     zIndex = 17;
-                    offsetY = -40;
+                    offsetY = -30;
                     scale = 0.85;
                     opacity = 0.7;
                   }
@@ -148,17 +148,19 @@ const Projects = () => {
               </button>
             </div>
           </div>
+        </div>
+      </div>
           
-          {/* Spacer div - create space for folders */}
-          <div className="h-48 md:h-64"></div>
-          
-          {/* Project navigation dots - positioned right above the counter line */}
-          <div className="absolute bottom-[-0px] md:bottom-[80px] left-0 right-0 flex justify-center z-20">
+      {/* Spacer div */}
+      <div className="-z-100">
+        <div className="h-100 md:h-100 relative">
+          {/* navigation dots*/}
+          <div className="flex justify-center md:h-10">
             {filteredProjects.map((project, index) => (
               <button
                 key={project.id}
                 onClick={() => setActiveIndex(index)}
-                className={`w-3 h-3 mx-1 rounded-full transition-all ${
+                className={`w-3 h-3 mx-1 -z-200 rounded-full transition-all ${
                   index === activeIndex ? 'bg-black scale-125' : 'bg-gray-300'
                 }`}
                 aria-label={`Show project ${index + 1}`}
@@ -167,9 +169,10 @@ const Projects = () => {
           </div>
         </div>
       </div>
+        
       
-      {/* Project counter - moved to the bottom */}
-      <div className="container mx-auto max-w-4xl mt-auto">
+      {/* counter*/}
+      <div className="container mx-auto max-w-4xl">
         <div className="text-center py-6 font-mono border-t border-gray-200">
           <span className="text-lg">{filteredProjects.length > 0 ? activeIndex + 1 : 0}</span>
           <span className="text-gray-400 mx-2">/</span>

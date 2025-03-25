@@ -192,11 +192,12 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
         </div>
         
         <div className="absolute top-[15%] left-0 right-0 bottom-[15%] flex flex-col items-center px-4 md:px-12">
-          {/* Project title */}
-          <h3 className="text-lg md:text-2xl font-bold uppercase mb-2 md:mb-0 text-center truncate max-w-full md:max-w-none md:whitespace-normal">{projectTitle}</h3>
+          {/* Project title - improved to prevent cutoff */}
+          <h3 className="text-lg md:text-xl font-bold uppercase mb-1 text-center max-w-full overflow-hidden text-ellipsis px-2">
+            {projectTitle}
+          </h3>
           
-          
-          <div className="w-4/5 md:mb-4">
+          <div className="w-4/5 mb-1 md:mb-3">
             {imageError || !processedImageUrl ? (
               <ImagePlaceholder 
                 title={imageError ? "Image failed to load" : "No image available"} 
@@ -206,16 +207,16 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
               <img 
                 src={processedImageUrl} 
                 alt={projectTitle} 
-                className="w-full max-h-24 md:max-h-36 object-contain"
+                className="w-full max-h-20 md:max-h-32 object-contain"
                 onError={handleImageError}
                 loading="lazy"
               />
             )}
           </div>
           
-          {/* Description - visible on all screen sizes with adjusted clamp for desktop */}
-          <p className="text-sm mb-3 text-center line-clamp-3 md:line-clamp-none md:overflow-visible" 
-             style={{ minHeight: '3rem' }}>
+          {/* Description - made smaller and enforced truncation */}
+          <p className="text-xs md:text-sm mb-2 text-center line-clamp-2 md:line-clamp-3 overflow-hidden" 
+             style={{ minHeight: '2rem', maxHeight: '4.5rem' }}>
             {description}
           </p>
           

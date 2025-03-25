@@ -27,7 +27,7 @@ const Research = () => {
   return (
     <main className="py-6 px-4 flex flex-col min-h-screen">
       <div className="container mx-auto max-w-4xl flex-grow">
-        <div className="flex flex-col">
+        <div className="flex flex-col relative">
           {/* Page Title and Back Button */}
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-2xl">Research</h1>
@@ -42,7 +42,7 @@ const Research = () => {
           </div>
           
           {/* Projects Stacked Display - Raised higher */}
-          <div className="relative h-[180px] md:h-[220px] flex items-center justify-center mb-0">
+          <div className="relative h-[120px] md:h-[120px] flex items-center justify-center mb-0 z-40">
             {/* Loading indicator */}
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 z-50">
@@ -125,7 +125,7 @@ const Research = () => {
             </div>
             
             {/* Navigation buttons */}
-            <div className="absolute bottom-[-20px] md:bottom-[-40px] left-2 md:left-0 z-30">
+            <div className="absolute bottom-[-20px] md:bottom-[-100px] left-2 md:left-0 z-30">
               <button 
                 onClick={showPrevious}
                 className="bg-white border border-black p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -137,7 +137,7 @@ const Research = () => {
               </button>
             </div>
             
-            <div className="absolute bottom-[-20px] md:bottom-[-40px] right-2 md:right-0 z-30">
+            <div className="absolute bottom-[-20px] md:bottom-[-100px] right-2 md:right-0 z-30">
               <button 
                 onClick={showNext}
                 className="bg-white border border-black p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -149,17 +149,19 @@ const Research = () => {
               </button>
             </div>
           </div>
+        </div>
+      </div>
           
-          {/* Spacer div - create space for folders */}
-          <div className="h-48 md:h-64"></div>
-          
-          {/* Project navigation dots - positioned right above the counter line */}
-          <div className="flex justify-center mb-6 relative z-20">
+      {/* Spacer div */}
+      <div className="-z-100">
+        <div className="h-100 md:h-100 relative">
+          {/* navigation dots*/}
+          <div className="flex justify-center md:h-10">
             {filteredProjects.map((project, index) => (
               <button
                 key={project.id}
                 onClick={() => setActiveIndex(index)}
-                className={`w-3 h-3 mx-1 rounded-full transition-all ${
+                className={`w-3 h-3 mx-1 -z-200 rounded-full transition-all ${
                   index === activeIndex ? 'bg-black scale-125' : 'bg-gray-300'
                 }`}
                 aria-label={`Show project ${index + 1}`}
@@ -168,6 +170,8 @@ const Research = () => {
           </div>
         </div>
       </div>
+        
+      
       
       {/* Project counter - moved to the bottom */}
       <div className="container mx-auto max-w-4xl mt-auto">

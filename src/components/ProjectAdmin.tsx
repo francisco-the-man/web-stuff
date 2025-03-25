@@ -559,22 +559,11 @@ const ProjectAdmin = () => {
           <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
             <h2 className="text-lg font-bold mb-3">Using Notion for Project Management</h2>
             
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-md font-medium mb-2">Benefits</h3>
-                <ul className="list-disc ml-5 text-sm space-y-1">
-                  <li>Centralized database in Notion</li>
-                  <li>Easy-to-use interface for content management</li>
-                  <li>Rich media support for images</li>
-                  <li>Collaborative editing with your team</li>
-                  <li>Structured data with validation</li>
-                </ul>
-              </div>
               
               <div>
                 <h3 className="text-md font-medium mb-2">Getting Started</h3>
                 <p className="text-sm mb-3">
-                  Your projects are stored in a Notion database and loaded via the Notion API. 
+                  Projects are stored in a Notion database and loaded via the Notion API. 
                   Use the test and refresh buttons to check connection status and update content.
                 </p>
                 <div className="flex space-x-3">
@@ -592,24 +581,16 @@ const ProjectAdmin = () => {
                   </button>
                 </div>
               </div>
-            </div>
             
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <h3 className="text-md font-medium mb-2">Workflow</h3>
-              <ol className="list-decimal ml-5 text-sm space-y-1">
-                <li>Add or edit projects in your Notion database</li>
-                <li>Click "Refresh Projects" to load the latest data from Notion</li>
-                <li>Local changes made in this interface are stored in your browser</li>
-                <li>Drag and drop projects to reorder them in the display</li>
-              </ol>
-            </div>
+            
+            
 
             {/* Add new section for GitHub image hosting */}
             <div className="mt-6 pt-4 border-t border-gray-200">
               <h3 className="text-md font-medium mb-2">Image Hosting with GitHub</h3>
               <div className="bg-blue-50 p-3 rounded border border-blue-200 mb-3">
                 <p className="text-sm">
-                  <strong>Important:</strong> For permanent image links, use GitHub-hosted images in your Notion database 
+                  <strong>Important:</strong> For permanent image links, use GitHub-hosted images in the Notion database 
                   instead of uploading images directly to Notion.
                 </p>
               </div>
@@ -620,7 +601,7 @@ const ProjectAdmin = () => {
                     https://[username].github.io/[repo-name]/path/to/image.jpg
                   </code>
                 </li>
-                <li>In your Notion database, add this URL to the ProjectImage field
+                <li>In the Notion database, add this URL to the ProjectImage field
                   <ul className="list-disc ml-5 text-xs mt-1">
                     <li>Use "Link" or "External" option when adding the image</li>
                     <li>Do not upload the image directly to Notion</li>
@@ -628,9 +609,6 @@ const ProjectAdmin = () => {
                 </li>
                 <li>Refresh projects to see the change</li>
               </ol>
-              <p className="text-xs text-gray-500 mt-2">
-                Notion-hosted images expire after a short time, while GitHub-hosted images are permanent.
-              </p>
             </div>
           </div>
         </div>
