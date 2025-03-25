@@ -35,7 +35,7 @@ const Computer = () => {
                       <EncircleButton 
                         to="https://github.com/francisco-the-man" 
                         external={true}
-                        variant="content"
+                        variant="nav"
                       >
                         github
                       </EncircleButton>
@@ -55,7 +55,7 @@ const Computer = () => {
                     <div className="absolute right-0 -bottom-10 transform translate-x-1/4 translate-y-1/2">
                       <EncircleButton 
                         to="/computer/projects"
-                        variant="content"
+                        variant="nav"
                       >
                         projects
                       </EncircleButton>

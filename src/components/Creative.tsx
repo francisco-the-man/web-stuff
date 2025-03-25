@@ -15,7 +15,7 @@ const Creative = () => {
               {/* Use transform and scale-based responsive design instead of flex-based layout */}
               <div className="relative w-full max-w-md mx-auto">
                 {/* Center with Creative Hand GIF - Positioned absolutely as the reference point */}
-                <div className="absolute left-1/2 transform -translate-x-1/2 top-0 w-40 md:w-64 z-10">
+                <div className="absolute -mt-16 left-1/2 transform -translate-x-1/2 top-0 w-40 md:w-64 z-10">
                   <img 
                     src={creativeHand} 
                     alt="Creative Hand" 
@@ -24,17 +24,17 @@ const Creative = () => {
                 </div>
                 
                 {/* Physical Media Button - Left side */}
-                <div className="absolute left-0 top-20 md:top-24 transform scale-75 md:scale-100 origin-left z-0">
+                <div className="absolute left-0 top-20 md:top-24 transform scale-75 md:scale-100 origin-left">
                   <div className="relative">
                     <img 
                       src={arrow} 
                       alt="" 
                       className="w-[180px] md:w-[220px] transform rotate-0" 
                     />
-                    <div className="absolute -left-5 -bottom-10 transform -translate-x-1/4 translate-y-1/2">
+                    <div className="absolute -left-5 -bottom-10 transform -translate-x-1/4 translate-y-1/2 z-100">
                       <EncircleButton 
                         to="/creative/physical-media" 
-                        variant="content"
+                        variant="nav"
                       >
                         physical media
                       </EncircleButton>
@@ -53,7 +53,7 @@ const Creative = () => {
                     <div className="absolute right-0 -bottom-10 transform translate-x-1/4 translate-y-1/2">
                       <EncircleButton 
                         to="/creative/clothing"
-                        variant="content"
+                        variant="nav"
                       >
                         clothing
                       </EncircleButton>
