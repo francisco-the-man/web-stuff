@@ -123,6 +123,8 @@ const Research = () => {
                         description={project.description}
                         type={project.type}
                         position={project.position}
+                        authorNames={project.authorNames}
+                        repoLink={project.repoLink}
                         zIndex={getZIndex(index, filteredProjects.length)}
                         projectSlug={project.projectSlug}
                         className="mx-auto shadow-lg"
