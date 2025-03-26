@@ -19,7 +19,7 @@ export const loadProjects = async (): Promise<ProjectData[]> => {
       const validatedProjects = notionProjects.map((project, index) => {
         // Add a fallback image if the image doesn't exist
         if (!project.projectImg || project.projectImg === "") {
-          project.projectImg = "/vite.svg"; // Use a known image that exists
+          project.projectImg = "/vite.svg"; // Use known image fallback
         }
         
         // Ensure image path starts with / 

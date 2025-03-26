@@ -137,13 +137,11 @@ const mapNotionPageToProject = (page: any, index: number): ProjectData => {
       finalImgUrl = rawUrl;
     }
     
-    // Log out image URL source for debugging
+
     if (finalImgUrl !== '/vite.svg') {
       const isGitHubUrl = finalImgUrl.includes('github.io') || 
                           finalImgUrl.includes('githubusercontent.com') ||
                           finalImgUrl.includes('github.com');
-      console.log(`Project ${index + 1} using ${isGitHubUrl ? 'GitHub' : 'Notion'} hosted image: ${
-        finalImgUrl.substring(0, 50)}...`);
     }
     
     // Build the project data object
@@ -157,7 +155,8 @@ const mapNotionPageToProject = (page: any, index: number): ProjectData => {
       position: position, // Automatically assigned based on index
       category: determineCategory(), // Using our new function
       authorNames: getValue('AuthorNames', 'rich_text', ''),
-      repoLink: getValue('RepoLink', 'url', '')
+      repoLink: getValue('RepoLink', 'url', ''),
+      projectSlug: getValue('ProjectSlug', 'rich_text', '')
     };
   } catch (error) {
     console.error(`Error mapping Notion page to project:`, error);
@@ -170,7 +169,8 @@ const mapNotionPageToProject = (page: any, index: number): ProjectData => {
       type: 'computational',
       position: positions[index % positions.length], // Still assign position even in error case
       category: 'computer',
-      repoLink: '#'
+      repoLink: '#',
+      projectSlug: '#'
     };
   }
 };
