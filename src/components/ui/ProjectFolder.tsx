@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import EncircleButton from './EncircleButton';
 import { CSSProperties } from 'react';
@@ -40,6 +40,10 @@ interface ProjectFolderProps {
   authorNames?: string; // Required for 'written' type
   repoLink?: string; // Required for 'computational' type
   className?: string;
+  onClick?: () => void;
+  projectSlug?: string;
+  zIndex: number;
+  totalProjects: number;
 }
 
 const ProjectFolder: React.FC<ProjectFolderProps> = ({
@@ -52,7 +56,24 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
   authorNames,
   repoLink,
   className = '',
+  onClick,
+  projectSlug,
+  zIndex,
+  totalProjects,
 }) => {
+  const navigate = useNavigate();
+
+  const handleClick = (e: React.MouseEvent) => {
+    const isAtFront = zIndex === totalProjects;
+
+    if (isAtFront &&projectSlug) {
+      e.stopPropagation(); // Prevent other click handlers
+      navigate(projectSlug);
+    } else if (onClick) {
+      onClick();
+    }
+  };
+
   const [imageError, setImageError] = useState<string | null>(null);
   
   // Log the incoming image URL for debugging
@@ -175,7 +196,7 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
   const processedImageUrl = getImageUrl(projectImg);
 
   return (
-    <div className={`absolute top-[30%] w-full max-w-xl mx-auto ${className}`}>
+    <div className={`absolute top-[30%] w-full max-w-xl mx-auto ${className}`} onClick={handleClick}>
       {/* Folder graphic with content positioned on top */}
       <div className="relative">
         {/* SVG Folder */}

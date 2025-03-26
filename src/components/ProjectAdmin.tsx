@@ -80,6 +80,7 @@ const ProjectAdmin = () => {
     category: 'computer',
     authorNames: '',
     repoLink: '',
+    projectSlug: '',
   };
 
   // Test Notion connection
@@ -508,16 +509,32 @@ const ProjectAdmin = () => {
                   </div>
                   
                   {editingProject.type === 'written' ? (
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium mb-1">Author Names</label>
-                      <input
-                        type="text"
-                        name="authorNames"
-                        value={editingProject.authorNames || ''}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded"
-                      />
-                    </div>
+                      <>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium mb-1">Author Names</label>
+                        <input
+                          type="text"
+                          name="authorNames"
+                          value={editingProject.authorNames || ''}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium mb-1">Project Slug (for dedicated page)</label>
+                        <input
+                          type="text"
+                          name="projectSlug"
+                          value={editingProject.projectSlug || ''}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded"
+                          placeholder="/research/ddpms"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Leave empty if project doesn't have a dedicated page. Include leading slash (e.g., /research/ddpms)
+                        </p>
+                      </div>
+                    </>
                   ) : (
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium mb-1">Repository Link</label>

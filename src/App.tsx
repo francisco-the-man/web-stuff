@@ -13,6 +13,7 @@ import Footer from './components/Footer';
 import { ChaosProvider } from './context/ChaosContext';
 import { ProjectProvider } from './context/ProjectContext';
 import ChaosEffect from './components/ChaosEffect';
+import DDPMs from './components/DDPMs';
 
 function App() {
   // Get the base path from the environment or use the default
@@ -39,6 +40,7 @@ function App() {
                 <Route path="/creative" element={<Creative />} />
                 <Route path="/creative/physical-media" element={<PhysicalMedia />} />
                 <Route path="/creative/clothing" element={<Clothing />} />
+                <Route path="/research/ddpms" element={<DDPMs />} />
               </Routes>
             </div>
             <Footer />

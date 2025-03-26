@@ -24,6 +24,11 @@ const Projects = () => {
     setActiveIndex((prevIndex) => (prevIndex - 1 + filteredProjects.length) % filteredProjects.length);
   };
 
+  const getZIndex = (index: number, total: number): number => {
+    if (index === activeIndex) return total; // Highest z-index for active
+    return total - Math.abs(index - activeIndex); // Lower z-index for others
+  };
+
   return (
     <main className="py-6 px-4 flex flex-col min-h-screen">
       <div className="container mx-auto max-w-4xl flex-grow">
@@ -116,6 +121,10 @@ const Projects = () => {
                         authorNames={project.authorNames}
                         repoLink={project.repoLink}
                         className="mx-auto shadow-lg"
+                        zIndex={getZIndex(index, filteredProjects.length)}
+                        onClick={() => handleProjectClick(index)}
+                        projectSlug={project.projectSlug}
+                        totalProjects={filteredProjects.length}
                       />
                     </div>
                   );

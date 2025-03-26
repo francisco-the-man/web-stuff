@@ -19,6 +19,7 @@ export interface ProjectData {
   category: ProjectCategory;
   authorNames?: string;
   repoLink?: string;
+  projectSlug?: string;
 }
 
 // Get default projects (used as fallback)
