@@ -60,6 +60,16 @@ const Creative = () => {
                     </div>
                   </div>
                 </div>
+                
+                {/* Video Art Button - Centered underneath the hand */}
+                <div className="absolute left-1/2 transform -translate-x-1/2 top-[180px] md:top-[350px] z-20">
+                  <EncircleButton 
+                    to="/creative/videoart"
+                    variant="nav"
+                  >
+                    video art
+                  </EncircleButton>
+                </div>
               </div>
               
               {/* Add extra space at bottom to account for absolute positioning */}
