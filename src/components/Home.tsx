@@ -68,24 +68,20 @@ const Home = () => {
               things about the world, how that knowledge is both interconnected and interdependent, 
               and the ways in which we mislead ourselves.
             </p>
-            
+
             <p className="mb-6">
-              I think human beings are rich and fascinating, but I also think we, and our creations 
-              (formal systems included), are fallible. I think we exist at the limit. Our capacity 
-              for dialogue is unique— it shapes our societies, drives our technology, and pushes us 
-              toward a <span className="italic">collective sense of understanding</span>. But this 
-              intersubjectivity is also exactly why we're stuck somewhere between subjectivity and 
-              objectivity. On one hand, we live deeply within our individual perceptions, limited 
-              by our senses and embodied experiences. On the other, language lets us transcend those 
-              personal boundaries, offering us an imperfect glimpse of what lies beyond our immediate 
-              reach. This collective vision—this shared yet always slightly-out-of-reach understanding—is 
-              what I want to try to understand.
+              I like to play around with <span className="italic">formal systems</span>, <span className="italic">computational models</span>,
+              and <span className="italic">digital art</span>. But I also like to use my hands and build things in the real world (prints, paintings,
+              sculptures and physical devices (gizmos!)). 
+            </p>
+
+            <p className="mb-6">
+              Right now, I'm thinking about how we can use <span className="italic">computational models</span> to 
+              understand how science gets a hold on reality, I'm working on a video game about Tycho Brahe, and
+              I'm trying to built an information extraction system for journalism.
             </p>
             
-            <p className="mb-12">
-              As for methodology, I am with Michel Serres when he says "cross-breeding is my cultural ideal"- 
-              in other words, I think interdisciplinarity is essential.
-            </p>
+            
           </div>
         </div>
       </div>
