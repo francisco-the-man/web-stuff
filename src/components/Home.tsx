@@ -78,7 +78,7 @@ const Home = () => {
             <p className="mb-6">
               Right now, I'm thinking about how we can use <span className="italic">computational models</span> to 
               understand how science gets a hold on reality, I'm working on a video game about Tycho Brahe, and
-              I'm trying to built an information extraction system for journalism.
+              I'm trying to build a graph-based information extraction system for journalism.
             </p>
             
             
