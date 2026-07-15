@@ -1,6 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import EncircleButton from './EncircleButton';
+import Markdown from './Markdown';
 import { CSSProperties } from 'react';
 // Import SVG assets
 import folderLSvg from '../../assets/projects/FolderL.svg';
@@ -236,10 +237,12 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
           </div>
           
           {/* Description - made smaller and enforced truncation */}
-          <p className="text-xs md:text-sm mb-2 text-center line-clamp-2 md:line-clamp-3 overflow-hidden" 
-             style={{ minHeight: '2rem', maxHeight: '4.5rem' }}>
+          <Markdown
+            className="text-xs md:text-sm mb-2 text-center line-clamp-2 md:line-clamp-3 overflow-hidden"
+            style={{ minHeight: '2rem', maxHeight: '4.5rem' }}
+          >
             {description}
-          </p>
+          </Markdown>
           
           {/* Author or GitHub link */}
           <div className="mt-auto">

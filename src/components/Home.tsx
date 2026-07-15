@@ -1,5 +1,6 @@
-import profileImage from '../assets/avery_profile.png';
 import symsysPopup from '../assets/symsys-popup.svg';
+import Markdown from './ui/Markdown';
+import homeContent from '../_content/home.json';
 
 const Home = () => {
   return (
@@ -10,15 +11,15 @@ const Home = () => {
           <div className="flex flex-col md:flex-row items-start mb-8">
             {/* Image moved back to left, border and rounded corners removed */}
             <div className="md:mr-12 mb-8 md:mb-0 md:max-w-[200px]">
-              <img 
-                src={profileImage} 
+              <img
+                src={homeContent.profileImage}
                 alt="Avery Louis"
                 className="w-full"
               />
             </div>
             
             <div className="flex flex-col md:max-w-md">
-              <h1 className="text-xl font-medium mb-4">Hi, I'm Avery</h1>
+              <h1 className="text-xl font-medium mb-4">{homeContent.heading}</h1>
               
               {/* Symbolic Systems with popup on hover */}
               <div className="relative">
@@ -60,29 +61,13 @@ const Home = () => {
             </div>
           </div>
           
-          {/* Bio paragraphs */}
-          <div className="prose max-w-none text-justify mt-8">
-            <p className="mb-6">
-              If I had to put it concisely, I'd say I'm most interested in how we come to 
-              <span className="italic"> know </span> 
-              things about the world, how that knowledge is both interconnected and interdependent, 
-              and the ways in which we mislead ourselves.
-            </p>
-
-            <p className="mb-6">
-              I like to play around with <span className="italic">formal systems</span>, <span className="italic">computational models</span>,
-              and <span className="italic">digital art</span>. But I also like to use my hands and build things in the real world (prints, paintings,
-              sculptures and physical devices (gizmos!)). 
-            </p>
-
-            <p className="mb-6">
-              Right now, I'm thinking about how we can use <span className="italic">computational models</span> to 
-              understand how science gets a hold on reality, I'm working on a video game about Tycho Brahe, and
-              I'm trying to build a graph-based information extraction system for journalism.
-            </p>
-            
-            
-          </div>
+          {/* Bio paragraphs (edited via /admin) */}
+          <Markdown
+            className="prose max-w-none text-justify mt-8"
+            paragraphClassName="mb-6"
+          >
+            {homeContent.bio}
+          </Markdown>
         </div>
       </div>
     </main>

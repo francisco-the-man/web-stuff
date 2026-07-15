@@ -1,0 +1,9 @@
+{
+  "fileName": "SUBLINE",
+  "projectTitle": "Subline",
+  "description": "A graph-based tool to assist journalists in retrieving and verifying archival data (as well as other fun things like making datasets from articles and internal hyperlinks). This is all powered by a knowledge graph with entities and relationships extracted from article archives.",
+  "projectImg": "/projects/images/img-bb.png",
+  "type": "computational",
+  "category": "computer",
+  "repoLink": "https://github.com/Sub-Line/main.git"
+}

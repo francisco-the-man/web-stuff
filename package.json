@@ -12,19 +12,17 @@
     "cms-proxy": "npx decap-server"
   },
   "dependencies": {
-    "@notionhq/client": "^2.2.14",
     "@types/matter-js": "^0.19.8",
-    "decap-cms-app": "^3.1.3",
-    "dotenv": "^16.4.7",
     "matter-js": "^0.20.0",
-    "octokit": "^4.1.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^6.10.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@tailwindcss/line-clamp": "^0.4.4",
+    "@types/node": "^26.1.1",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.3.4",

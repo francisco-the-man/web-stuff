@@ -1,11 +1,34 @@
-import { defineConfig } from 'vite'
+import { defineConfig, Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { imagetools } from 'vite-imagetools'
+
+// In dev, Vite's SPA fallback would swallow /admin/ and serve the React app;
+// production (Netlify) serves public/admin/index.html as the directory index.
+const adminIndexRewrite = (): Plugin => ({
+  name: 'admin-index-rewrite',
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      // Redirect /admin -> /admin/ so the CMS's relative config.yml fetch
+      // resolves to /admin/config.yml (not /config.yml)
+      if (req.url === '/admin') {
+        res.statusCode = 302
+        res.setHeader('Location', '/admin/')
+        res.end()
+        return
+      }
+      if (req.url === '/admin/') {
+        req.url = '/admin/index.html'
+      }
+      next()
+    })
+  },
+})
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    adminIndexRewrite(),
     // Serve large PNG/JPEG art scans as web-sized WebP without touching the source files
     imagetools({
       defaultDirectives: (url) => {

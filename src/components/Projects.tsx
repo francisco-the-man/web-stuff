@@ -1,19 +1,17 @@
 import { useState } from 'react';
 import EncircleButton from './ui/EncircleButton';
 import ProjectFolder from './ui/ProjectFolder';
-import { Link } from 'react-router-dom';
-import { useProjects, ProjectData } from '../context/ProjectContext';
+import { useProjects, positionForIndex } from '../context/ProjectContext';
 
 const Projects = () => {
-  // Get projects from context
-  const { projects, refreshProjects, isLoading } = useProjects();
-  
-  // Filter projects to only show computer projects or both
-  const filteredProjects = projects.filter(
-    project => project.category === 'computer' || project.category === 'both'
-  );
-  
+  // Ordered computer-page projects from context (order managed in /admin)
+  const { computerProjects: filteredProjects } = useProjects();
+
   const [activeIndex, setActiveIndex] = useState(0);
+
+  const handleProjectClick = (index: number) => {
+    setActiveIndex(index);
+  };
 
   // Navigate through projects
   const showNext = () => {
@@ -47,18 +45,11 @@ const Projects = () => {
           </div>
           
           <div className="relative h-[120px] md:h-[120px] flex items-center justify-center mb-0 z-40">
-            {/* Loading indic */}
-            {isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 z-50">
-                <div className="animate-spin text-3xl">⟳</div>
-              </div>
-            )}
-          
             {/* Stacked projects */}
             <div className="relative w-full max-w-[300px] md:max-w-xl mx-auto transform scale-80 md:scale-100">
-              {filteredProjects.length === 0 && !isLoading ? (
+              {filteredProjects.length === 0 ? (
                 <div className="text-center p-6 border border-gray-300 rounded">
-                  <p>No projects found. Try refreshing or add projects in the admin interface.</p>
+                  <p>No projects found. Add projects in the admin interface.</p>
                 </div>
               ) : (
                 filteredProjects.map((project, index) => {
@@ -101,8 +92,8 @@ const Projects = () => {
                   }
                   
                   return (
-                    <div 
-                      key={project.id}
+                    <div
+                      key={project.slug}
                       className="absolute left-0 right-0 transition-all duration-500 ease-in-out cursor-pointer"
                       style={{
                         zIndex,
@@ -117,7 +108,7 @@ const Projects = () => {
                         projectImg={project.projectImg}
                         description={project.description}
                         type={project.type}
-                        position={project.position}
+                        position={positionForIndex(index)}
                         authorNames={project.authorNames}
                         repoLink={project.repoLink}
                         className="mx-auto shadow-lg"
@@ -167,7 +158,7 @@ const Projects = () => {
           <div className="flex justify-center md:h-10">
             {filteredProjects.map((project, index) => (
               <button
-                key={project.id}
+                key={project.slug}
                 onClick={() => setActiveIndex(index)}
                 className={`w-3 h-3 mx-1 -z-200 rounded-full transition-all ${
                   index === activeIndex ? 'bg-black scale-125' : 'bg-gray-300'

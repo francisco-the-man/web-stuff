@@ -5,7 +5,6 @@ import Contact from './components/Contact';
 import Computer from './components/Computer';
 import Projects from './components/Projects';
 import Research from './components/Research';
-import ProjectAdmin from './components/ProjectAdmin';
 import Creative from './components/Creative';
 import PhysicalMedia from './components/PhysicalMedia';
 import Clothing from './components/Clothing';
@@ -39,7 +38,6 @@ function App() {
                 <Route path="/computer/projects" element={<Projects />} />
                 <Route path="/research" element={<Research />} />
                 <Route path="/research/projects" element={<Research />} />
-                <Route path="/computer/projects/admin" element={<ProjectAdmin />} />
                 <Route path="/creative" element={<Creative />} />
                 <Route path="/creative/physical-media" element={<PhysicalMedia />} />
                 <Route path="/creative/clothing" element={<Clothing />} />
