@@ -111,6 +111,8 @@ const Projects = () => {
                         position={positionForIndex(index)}
                         authorNames={project.authorNames}
                         repoLink={project.repoLink}
+                        linkLabel={project.linkLabel}
+                        linkUrl={project.linkUrl}
                         className="mx-auto shadow-lg"
                         zIndex={getZIndex(index, filteredProjects.length)}
                         onClick={() => handleProjectClick(index)}

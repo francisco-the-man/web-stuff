@@ -15,6 +15,14 @@ const GitHubLogo = () => (
   </svg>
 );
 
+// Lucide "link" icon (https://lucide.dev/icons/link)
+const LinkIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+  </svg>
+);
+
 // Placeholder image component
 const ImagePlaceholder = ({ title, error }: { title: string, error?: string }) => (
   <div className="w-full h-36 bg-gray-100 border border-gray-300 flex flex-col items-center justify-center p-2">
@@ -40,6 +48,8 @@ interface ProjectFolderProps {
   position?: FolderPosition;
   authorNames?: string; // Required for 'written' type
   repoLink?: string; // Required for 'computational' type
+  linkLabel?: string; // Text next to the external link icon, e.g. "paper" or "blog"
+  linkUrl?: string; // Optional external link (paper, blog, ...)
   className?: string;
   onClick?: () => void;
   projectSlug?: string;
@@ -56,6 +66,8 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
   position = 'left',
   authorNames,
   repoLink,
+  linkLabel,
+  linkUrl,
   className = '',
   onClick,
   projectSlug,
@@ -244,8 +256,8 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
             {description}
           </Markdown>
           
-          {/* Author or GitHub link */}
-          <div className="mt-auto">
+          {/* Author, GitHub link, and optional external link */}
+          <div className="mt-auto flex items-center justify-center gap-3 flex-wrap">
             {type === 'written' ? (
               <p className="text-xs italic">
                 written by: {authorNames}
@@ -255,12 +267,26 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
                 <span className="mr-2 text-gray-700 transform scale-75 md:scale-100">
                   <GitHubLogo />
                 </span>
-                <EncircleButton 
-                  to={repoLink || '#'} 
+                <EncircleButton
+                  to={repoLink || '#'}
                   external={true}
                   variant="nav"
                 >
                   code
+                </EncircleButton>
+              </div>
+            )}
+            {linkUrl && (
+              <div className="flex items-center justify-center">
+                <span className="mr-2 text-gray-700 transform scale-75 md:scale-100">
+                  <LinkIcon />
+                </span>
+                <EncircleButton
+                  to={linkUrl}
+                  external={true}
+                  variant="nav"
+                >
+                  {linkLabel || 'link'}
                 </EncircleButton>
               </div>
             )}

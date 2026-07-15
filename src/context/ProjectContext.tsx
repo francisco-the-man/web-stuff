@@ -16,6 +16,8 @@ export interface ProjectData {
   category: ProjectCategory;
   authorNames?: string;
   repoLink?: string;
+  linkLabel?: string;
+  linkUrl?: string;
   projectSlug?: string;
 }
 

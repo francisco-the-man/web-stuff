@@ -112,6 +112,8 @@ const Research = () => {
                         position={positionForIndex(index)}
                         authorNames={project.authorNames}
                         repoLink={project.repoLink}
+                        linkLabel={project.linkLabel}
+                        linkUrl={project.linkUrl}
                         zIndex={getZIndex(index, filteredProjects.length)}
                         projectSlug={project.projectSlug}
                         className="mx-auto shadow-lg"

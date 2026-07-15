@@ -74,6 +74,8 @@ collections:
         ], required: true, hint: "Determines which page(s) this project appears on"}
       - {label: "Author Names", name: "authorNames", widget: "string", required: false, hint: "Shown for 'written' projects (e.g. Avery Louis (me) & ...)"}
       - {label: "Repository Link", name: "repoLink", widget: "string", required: false, hint: "Shown as the 'code' link for 'computational' projects", pattern: ['^(https?://.*|)$', "Must be a valid URL or empty"]}
+      - {label: "Extra Link Label", name: "linkLabel", widget: "string", required: false, hint: "Text shown next to the link icon, e.g. paper or blog"}
+      - {label: "Extra Link URL", name: "linkUrl", widget: "string", required: false, hint: "Any external link — arXiv paper, blog post, demo, etc. Shown with a link icon on the folder", pattern: ['^(https?://.*|)$', "Must be a valid URL or empty"]}
       - {label: "Dedicated Page Route", name: "projectSlug", widget: "string", required: false, hint: "Optional site route opened when the folder is clicked, e.g. /research/ddpms"}
 
   - name: "pages"
