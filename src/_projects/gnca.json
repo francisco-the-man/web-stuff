@@ -1,7 +1,7 @@
 {
   "fileName": "GNCA",
   "projectTitle": "GNCAs for PyTorch Geometric",
-  "description": "A general purpose library for arbitrary GNCA architectures… if you're into regenerating limbs, modelling wildfires, how nature self organises etc etc",
+  "description": "A general purpose library for arbitrary GNCA architectures… if you're into regenerating limbs, modelling wildfires, how nature self organises etc etc OH and [here](https://medium.com/stanford-cs224w/implementing-graph-neural-cellular-automata-098db0bca011)'s a fun blog post",
   "projectImg": "/projects/images/GNCAs-img.png",
   "type": "computational",
   "category": "computer",

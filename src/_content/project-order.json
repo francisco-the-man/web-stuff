@@ -1,14 +1,14 @@
 {
   "computer": [
     "subline",
+    "gnca",
     "metasci",
-    "ipa",
-    "gnca"
+    "ipa"
   ],
   "research": [
     "ndls",
-    "metasci",
     "ddpms",
+    "metasci",
     "genius"
   ]
 }
