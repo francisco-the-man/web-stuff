@@ -256,40 +256,43 @@ const ProjectFolder: React.FC<ProjectFolderProps> = ({
             {description}
           </Markdown>
           
-          {/* Author, GitHub link, and optional external link */}
-          <div className="mt-auto flex items-center justify-center gap-3 flex-wrap">
-            {type === 'written' ? (
+          {/* Author text on top; code / external links centered underneath, side by side */}
+          <div className="mt-auto flex flex-col items-center gap-1">
+            {type === 'written' && (
               <p className="text-xs italic">
                 written by: {authorNames}
               </p>
-            ) : (
-              <div className="flex items-center justify-center">
-                <span className="mr-2 text-gray-700 transform scale-75 md:scale-100">
-                  <GitHubLogo />
-                </span>
-                <EncircleButton
-                  to={repoLink || '#'}
-                  external={true}
-                  variant="nav"
-                >
-                  code
-                </EncircleButton>
-              </div>
             )}
-            {linkUrl && (
-              <div className="flex items-center justify-center">
-                <span className="mr-2 text-gray-700 transform scale-75 md:scale-100">
-                  <LinkIcon />
-                </span>
-                <EncircleButton
-                  to={linkUrl}
-                  external={true}
-                  variant="nav"
-                >
-                  {linkLabel || 'link'}
-                </EncircleButton>
-              </div>
-            )}
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              {type === 'computational' && (
+                <div className="flex items-center justify-center">
+                  <span className="mr-2 text-gray-700 transform scale-75 md:scale-100">
+                    <GitHubLogo />
+                  </span>
+                  <EncircleButton
+                    to={repoLink || '#'}
+                    external={true}
+                    variant="nav"
+                  >
+                    code
+                  </EncircleButton>
+                </div>
+              )}
+              {linkUrl && (
+                <div className="flex items-center justify-center">
+                  <span className="mr-2 text-gray-700 transform scale-75 md:scale-100">
+                    <LinkIcon />
+                  </span>
+                  <EncircleButton
+                    to={linkUrl}
+                    external={true}
+                    variant="nav"
+                  >
+                    {linkLabel || 'link'}
+                  </EncircleButton>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
