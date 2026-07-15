@@ -7,8 +7,16 @@ import { imagetools } from 'vite-imagetools'
 const adminIndexRewrite = (): Plugin => ({
   name: 'admin-index-rewrite',
   configureServer(server) {
-    server.middlewares.use((req, _res, next) => {
-      if (req.url === '/admin' || req.url === '/admin/') {
+    server.middlewares.use((req, res, next) => {
+      // Redirect /admin -> /admin/ so the CMS's relative config.yml fetch
+      // resolves to /admin/config.yml (not /config.yml)
+      if (req.url === '/admin') {
+        res.statusCode = 302
+        res.setHeader('Location', '/admin/')
+        res.end()
+        return
+      }
+      if (req.url === '/admin/') {
         req.url = '/admin/index.html'
       }
       next()
