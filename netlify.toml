@@ -4,7 +4,7 @@
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "22"
   NPM_FLAGS = "--prefer-offline --no-audit --no-fund --legacy-peer-deps"
 
 # Redirect all routes to index.html for single-page application

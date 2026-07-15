@@ -82,11 +82,12 @@ const VideoArt = () => {
   const VideoThumbnail = ({ video }: { video: Video }) => (
     <div className={getVideoClasses(video)} onClick={() => openLightbox(video)}>
       <div style={{padding: '56.25% 0 0 0', position: 'relative'}}>
-        <iframe 
+        <iframe
           src={`https://player.vimeo.com/video/${video.vimeoId}?badge=0&autopause=0&player_id=0&app_id=58479&background=1`}
-          frameBorder="0" 
-          allow="autoplay; fullscreen; picture-in-picture" 
-          style={{position: 'absolute', top: '0', left: '0', width: '100%', height: '100%'}} 
+          frameBorder="0"
+          allow="autoplay; fullscreen; picture-in-picture"
+          loading="lazy"
+          style={{position: 'absolute', top: '0', left: '0', width: '100%', height: '100%'}}
         />
       </div>
       <div className="text-xs md:text-sm pt-1 pb-2">
