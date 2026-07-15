@@ -10,6 +10,7 @@ import Creative from './components/Creative';
 import PhysicalMedia from './components/PhysicalMedia';
 import Clothing from './components/Clothing';
 import Footer from './components/Footer';
+import RouteMeta from './components/RouteMeta';
 import { ChaosProvider } from './context/ChaosContext';
 import { ProjectProvider } from './context/ProjectContext';
 import ChaosEffect from './components/ChaosEffect';
@@ -22,6 +23,7 @@ function App() {
   
   return (
     <Router basename={basePath}>
+      <RouteMeta />
       <ChaosProvider>
         <ProjectProvider>
           <div className="flex flex-col min-h-screen bg-white text-black font-ibm-plex-mono">

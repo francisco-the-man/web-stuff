@@ -12,7 +12,7 @@ const Home = () => {
             <div className="md:mr-12 mb-8 md:mb-0 md:max-w-[200px]">
               <img 
                 src={profileImage} 
-                alt="Avery" 
+                alt="Avery Louis"
                 className="w-full"
               />
             </div>
