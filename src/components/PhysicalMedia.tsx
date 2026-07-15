@@ -266,9 +266,11 @@ const PhysicalMedia = () => {
                 style={getArtworkStyles(artwork)}
                 onClick={() => openLightbox(artwork)}
               >
-                <img 
-                  src={artwork.image} 
-                  alt={artwork.title || `Artwork ${artwork.id}`} 
+                <img
+                  src={artwork.image}
+                  alt={artwork.title || `Artwork ${artwork.id}`}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-auto object-contain bg-white"
                 />
                 

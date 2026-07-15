@@ -181,9 +181,11 @@ const Clothing = () => {
       onClick={() => sketch.hasHover ? openDetailView(sketch) : null}
     >
       <div className="aspect-[3/4] overflow-hidden flex items-center justify-center">
-        <img 
-          src={sketch.image} 
-          alt={sketch.title} 
+        <img
+          src={sketch.image}
+          alt={sketch.title}
+          loading="lazy"
+          decoding="async"
           className="max-h-[400px] w-auto object-contain"
         />
         
