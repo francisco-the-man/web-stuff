@@ -1,0 +1,11 @@
+{
+  "id": 5,
+  "fileName": "IPA",
+  "projectTitle": "IPA palette for Obsidian",
+  "description": "An Obsidian plugin that lets you easily add IPA phonetic characters into your note.",
+  "projectImg": "/projects/images/IPA-palette.jpg",
+  "type": "computational",
+  "category": "computer",
+  "position": "middle",
+  "repoLink": "https://github.com/francisco-the-man/obsidian-ipa-palette"
+}

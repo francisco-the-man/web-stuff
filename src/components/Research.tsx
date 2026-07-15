@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import EncircleButton from './ui/EncircleButton';
 import ProjectFolder from './ui/ProjectFolder';
-import { Link } from 'react-router-dom';
-import { useProjects, ProjectData } from '../context/ProjectContext';
+import { useProjects } from '../context/ProjectContext';
 
 const Research = () => {
   // Get projects from context
-  const { projects, refreshProjects, isLoading } = useProjects();
+  const { projects } = useProjects();
   
   // Filter projects to only show research projects or both
   const filteredProjects = projects.filter(
@@ -52,18 +51,11 @@ const Research = () => {
           
           {/* Projects Stacked Display - Raised higher */}
           <div className="relative h-[120px] md:h-[120px] flex items-center justify-center mb-0 z-40">
-            {/* Loading indicator */}
-            {isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 z-50">
-                <div className="animate-spin text-3xl">⟳</div>
-              </div>
-            )}
-          
             {/* Stacked projects with improved mobile scaling - adjust positioning */}
             <div className="relative w-full max-w-[280px] md:max-w-xl mx-auto transform scale-75 md:scale-100">
-              {filteredProjects.length === 0 && !isLoading ? (
+              {filteredProjects.length === 0 ? (
                 <div className="text-center p-6 border border-gray-300 rounded">
-                  <p>No research projects found. Try refreshing or add projects in the admin interface.</p>
+                  <p>No research projects found. Add projects in the admin interface.</p>
                 </div>
               ) : (
                 filteredProjects.map((project, index) => {

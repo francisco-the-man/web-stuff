@@ -1,12 +1,11 @@
 {
-  "id": 1,
+  "id": 4,
   "fileName": "Genius",
-  "projectTitle": "Philosophy Studies",
-  "description": "A meandering adventure through Plato's Phaedrus, Kant's critiques, Luhmann's systems of knowledge, and Einstein's theory of relativity.",
+  "projectTitle": "The Terror of Genius",
+  "description": "A meandering adventure through Plato's Phaedrus, Kant's Critiques, Luhmann's systems of knowledge, Einstein's theory of relativity, and Barnett Newman's art (& more). What ties these things together? The question of genius & where it comes from.",
   "projectImg": "/projects/images/img-kant.png",
   "type": "written",
   "category": "research",
-  "position": "middle",
-  "repoLink": "",
-  "authorNames": ""
+  "position": "left",
+  "authorNames": "Avery Louis (me)"
 }

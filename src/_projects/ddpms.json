@@ -1,12 +1,12 @@
 {
-  "id": 0,
+  "id": 3,
   "fileName": "DDPMs",
-  "projectTitle": "Diffusion Models Research",
-  "description": "Drawing mathematical analogies between diffusion models and Hopfield network models of associative memory.",
+  "projectTitle": "Diffusion Models & Memory",
+  "description": "Drawing some mathematical analogies between diffusion models and hopfield network models of associative memory. It turns out that diffusion models might be a very good biological model of fallible memory.",
   "projectImg": "/projects/images/img_5776.jpg",
   "type": "written",
   "category": "research",
-  "position": "left",
-  "repoLink": "",
-  "authorNames": ""
+  "position": "right",
+  "authorNames": "Avery Louis (me) & Sisely DeLisi",
+  "projectSlug": "/research/ddpms"
 }
