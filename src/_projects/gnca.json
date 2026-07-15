@@ -1,11 +1,9 @@
 {
-  "id": 6,
   "fileName": "GNCA",
   "projectTitle": "GNCAs for PyTorch Geometric",
   "description": "A general purpose library for arbitrary GNCA architectures… if you're into regenerating limbs, modelling wildfires, how nature self organises etc etc",
   "projectImg": "/projects/images/GNCAs-img.png",
   "type": "computational",
   "category": "computer",
-  "position": "right",
   "repoLink": "https://github.com/francisco-the-man/GNCA.git"
 }

@@ -33,9 +33,20 @@ collections:
     delete: true
     slug: "{{fields.fileName}}"
     identifier_field: "fileName"
-    summary: "{{fileName}} - {{projectTitle}} ({{category}})"
-    sortable_fields: ['id', 'fileName', 'projectTitle', 'type', 'category']
+    summary: "{{fileName}} — {{projectTitle}} [{{type}}] ({{category}})"
+    sortable_fields: ['fileName', 'projectTitle', 'type', 'category']
+    view_groups:
+      - label: "Type"
+        field: type
+      - label: "Category"
+        field: category
     view_filters:
+      - label: "Computational"
+        field: type
+        pattern: "computational"
+      - label: "Written"
+        field: type
+        pattern: "written"
       - label: "Computer Projects"
         field: category
         pattern: "computer"
@@ -48,7 +59,6 @@ collections:
     editor:
       preview: false
     fields:
-      - {label: "Order", name: "id", widget: "number", value_type: "int", required: true, hint: "Display order — lower numbers show first"}
       - {label: "File Name", name: "fileName", widget: "string", required: true, hint: "This is the label shown on the folder tab"}
       - {label: "Project Title", name: "projectTitle", widget: "string", required: true, hint: "The main title of your project"}
       - {label: "Description", name: "description", widget: "markdown", required: true, minimal: true, buttons: [bold, italic, link], editor_components: [], modes: [rich_text, raw], hint: "Short description shown on the folder. Markdown works — select text and use the link button (or [text](url)) for inline links."}
@@ -62,11 +72,6 @@ collections:
           {label: "Research", value: "research"},
           {label: "Both", value: "both"}
         ], required: true, hint: "Determines which page(s) this project appears on"}
-      - {label: "Position", name: "position", widget: "select", options: [
-          {label: "Left", value: "left"},
-          {label: "Middle", value: "middle"},
-          {label: "Right", value: "right"}
-        ], required: true, hint: "Determines the folder-tab position"}
       - {label: "Author Names", name: "authorNames", widget: "string", required: false, hint: "Shown for 'written' projects (e.g. Avery Louis (me) & ...)"}
       - {label: "Repository Link", name: "repoLink", widget: "string", required: false, hint: "Shown as the 'code' link for 'computational' projects", pattern: ['^(https?://.*|)$', "Must be a valid URL or empty"]}
       - {label: "Dedicated Page Route", name: "projectSlug", widget: "string", required: false, hint: "Optional site route opened when the folder is clicked, e.g. /research/ddpms"}
@@ -74,6 +79,22 @@ collections:
   - name: "pages"
     label: "Site Pages"
     files:
+      - label: "Project Order"
+        name: "projectOrder"
+        file: "src/_content/project-order.json"
+        fields:
+          - label: "Computer Page Order"
+            name: "computer"
+            widget: "list"
+            collapsed: false
+            hint: "Drag to reorder the Computer projects page. Include projects with category Computer or Both. Folder-tab position cycles left/middle/right automatically."
+            field: {label: "Project", name: "project", widget: "relation", collection: "projects", search_fields: ["fileName", "projectTitle"], value_field: "{{slug}}", display_fields: ["fileName"]}
+          - label: "Research Page Order"
+            name: "research"
+            widget: "list"
+            collapsed: false
+            hint: "Drag to reorder the Research projects page. Include projects with category Research or Both."
+            field: {label: "Project", name: "project", widget: "relation", collection: "projects", search_fields: ["fileName", "projectTitle"], value_field: "{{slug}}", display_fields: ["fileName"]}
       - label: "Home Page"
         name: "home"
         file: "src/_content/home.json"

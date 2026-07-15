@@ -1,16 +1,11 @@
 import { useState } from 'react';
 import EncircleButton from './ui/EncircleButton';
 import ProjectFolder from './ui/ProjectFolder';
-import { useProjects } from '../context/ProjectContext';
+import { useProjects, positionForIndex } from '../context/ProjectContext';
 
 const Research = () => {
-  // Get projects from context
-  const { projects } = useProjects();
-  
-  // Filter projects to only show research projects or both
-  const filteredProjects = projects.filter(
-    project => project.category === 'research' || project.category === 'both'
-  );
+  // Ordered research-page projects from context (order managed in /admin)
+  const { researchProjects: filteredProjects } = useProjects();
   
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -99,7 +94,7 @@ const Research = () => {
                   
                   return (
                     <div 
-                      key={project.id}
+                      key={project.slug}
                       className="absolute left-0 right-0 transition-all duration-500 ease-in-out cursor-pointer"
                       style={{
                         zIndex,
@@ -114,7 +109,7 @@ const Research = () => {
                         projectImg={project.projectImg}
                         description={project.description}
                         type={project.type}
-                        position={project.position}
+                        position={positionForIndex(index)}
                         authorNames={project.authorNames}
                         repoLink={project.repoLink}
                         zIndex={getZIndex(index, filteredProjects.length)}
@@ -163,7 +158,7 @@ const Research = () => {
           <div className="flex justify-center md:h-10">
             {filteredProjects.map((project, index) => (
               <button
-                key={project.id}
+                key={project.slug}
                 onClick={() => setActiveIndex(index)}
                 className={`w-3 h-3 mx-1 -z-200 rounded-full transition-all ${
                   index === activeIndex ? 'bg-black scale-125' : 'bg-gray-300'

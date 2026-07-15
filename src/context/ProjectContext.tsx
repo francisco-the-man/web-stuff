@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { loadProjects } from '../utils/projectLoader';
+import { loadComputerProjects, loadResearchProjects } from '../utils/projectLoader';
 
 // Types from ProjectFolder component
 export type ProjectType = 'written' | 'computational';
@@ -7,31 +7,36 @@ export type FolderPosition = 'left' | 'middle' | 'right';
 export type ProjectCategory = 'research' | 'computer' | 'both';
 
 export interface ProjectData {
-  id: number;
+  slug: string;
   fileName: string;
   projectTitle: string;
   projectImg: string;
   description: string;
   type: ProjectType;
-  position: FolderPosition;
   category: ProjectCategory;
   authorNames?: string;
   repoLink?: string;
   projectSlug?: string;
 }
 
+// Folder-tab position cycles with display order: 1st left, 2nd middle, 3rd right, repeat
+export const positionForIndex = (index: number): FolderPosition =>
+  (['left', 'middle', 'right'] as const)[index % 3];
+
 export interface ProjectContextType {
-  projects: ProjectData[];
+  computerProjects: ProjectData[];
+  researchProjects: ProjectData[];
 }
 
 // Loaded once at module scope — project JSON is bundled at build time
-const projects = loadProjects();
+const computerProjects = loadComputerProjects();
+const researchProjects = loadResearchProjects();
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   return (
-    <ProjectContext.Provider value={{ projects }}>
+    <ProjectContext.Provider value={{ computerProjects, researchProjects }}>
       {children}
     </ProjectContext.Provider>
   );
