@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /computer/projects/admin
+
+Sitemap: https://www.francisco-the-man.com/sitemap.xml
