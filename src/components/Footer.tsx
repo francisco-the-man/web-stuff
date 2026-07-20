@@ -25,8 +25,14 @@ const Footer = () => {
           </EncircleButton>
         </div>
         
-        {/* Right side button */}
-        <div>
+        {/* Right side buttons */}
+        <div className="flex space-x-6">
+          <EncircleButton
+            to="https://scholar.google.com/citations?user=9v6uoR0AAAAJ&hl=en&authuser=1"
+            external={true}
+          >
+            Google Scholar
+          </EncircleButton>
           <EncircleButton to="/contact">
             Contact Me
           </EncircleButton>
